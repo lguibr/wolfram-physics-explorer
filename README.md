@@ -9,7 +9,12 @@
 
 A high-performance, GPU-accelerated visualization engine for **Wolfram Physics Project** models. Explore how simple graph rewriting rules can give rise to complex structures like spacetime, black holes, and quantum mechanics.
 
-![Demo](./public/demo.png)
+
+<div align="center">
+  <img src="./public/demo-1.png" width="48%" />
+  <img src="./public/demo-2.png" width="48%" />
+</div>
+
 
 ## ✨ Key Features
 

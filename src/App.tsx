@@ -68,7 +68,7 @@ const AppContent: React.FC = () => {
       {/* Mobile: Fixed Slide-over | Desktop: Static Column */}
       <div className={`
           fixed inset-y-0 left-0 z-50 w-80 bg-black/90 backdrop-blur-xl border-r border-white/10 shadow-2xl transform transition-transform duration-300 ease-in-out
-          md:relative md:transform-none md:w-full md:bg-black/80
+          md:relative md:transform-none md:w-full md:bg-black/80 md:overflow-hidden
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
           <div className="h-full flex flex-col">
