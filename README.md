@@ -1,5 +1,10 @@
 # 🌌 Wolfram Physics Explorer
 
+<div align="center">
+  <img src="./public/logo.png" width="200" style="border-radius: 50%; box-shadow: 0 0 20px rgba(66, 133, 244, 0.5);" />
+</div>
+
+
 > **Simulating the computational universe, one hypergraph at a time.**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
