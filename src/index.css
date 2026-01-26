@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cosmic-dark: #050508;
+  --color-cosmic-panel: rgba(20, 20, 30, 0.7);
+  
+  --color-g-blue: #4285F4;
+  --color-g-red: #EA4335;
+  --color-g-yellow: #FBBC05;
+  --color-g-green: #34A853;
+  
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  
+  --backdrop-blur-xs: 2px;
+
+  /* Radix UI / Shadcn Colors mappings (simplified) */
+  --color-background: #050508;
+  --color-foreground: #ffffff;
+  
+  --color-muted: rgba(255, 255, 255, 0.1);
+  --color-muted-foreground: #a1a1aa;
+  
+  --color-popover: #050508;
+  --color-popover-foreground: #ffffff;
+  
+  --color-card: rgba(20, 20, 30, 0.7);
+  --color-card-foreground: #ffffff;
+  
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-input: rgba(255, 255, 255, 0.1);
+  
+  --color-primary: #4285F4;
+  --color-primary-foreground: #ffffff;
+  
+  --color-secondary: #FBBC05;
+  --color-secondary-foreground: #000000;
+  
+  --color-accent: rgba(255, 255, 255, 0.1);
+  --color-accent-foreground: #ffffff;
+  
+  --color-destructive: #EA4335;
+  --color-destructive-foreground: #ffffff;
+  
+  --color-ring: #4285F4;
+  
+  --radius-lg: 0.5rem;
+  --radius-md: calc(0.5rem - 2px);
+  --radius-sm: calc(0.5rem - 4px);
+  
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+}
+
+/* Base styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    overflow: hidden;
+  }
+}
+
+/* Custom Utilities */
+@utility glass-panel {
+  @apply bg-cosmic-panel backdrop-blur-md border border-glass-border shadow-xl;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #777; }
