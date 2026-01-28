@@ -8,6 +8,10 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3011,
         host: '0.0.0.0',
+        headers: {
+          'Cross-Origin-Opener-Policy': 'same-origin',
+          'Cross-Origin-Embedder-Policy': 'require-corp',
+        },
       },
       plugins: [react()],
       define: {
@@ -18,6 +22,10 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, './src'),
         }
+      },
+      assetsInclude: ['**/*.wasm'],
+      optimizeDeps: {
+        exclude: ['@sqlite.org/sqlite-wasm', 'wolfram-physics-wasm']
       },
       test: {
         globals: true,

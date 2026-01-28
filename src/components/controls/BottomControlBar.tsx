@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipBack, SkipForward, RefreshCw } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, RefreshCw, Disc, Square, Download } from 'lucide-react';
 import { useSimulation } from '@/context/SimulationContext';
 
 interface BottomControlBarProps {
@@ -18,15 +18,59 @@ export const BottomControlBar: React.FC<BottomControlBarProps> = ({ onFocusNode 
         resetSimulation, 
         stepBack, 
         stepForward, 
-        jumpToStep 
+        jumpToStep,
+        isRecording,
+        startRecording,
+        stopRecording,
+        exportRecording
     } = useSimulation();
 
     const totalSteps = history.length;
 
     return (
         <Card className="flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 p-3 md:p-4 rounded-xl border-white/10 bg-black/80 backdrop-blur-xl w-full max-w-4xl shadow-xl pointer-events-auto">
+             {/* Recording Controls */}
+             <div className="flex items-center gap-2 order-2 md:order-1 border-r border-white/10 pr-4 mr-2">
+                {!isRecording ? (
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={startRecording} 
+                        className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+                        title="Start Recording"
+                    >
+                        <Disc className="h-5 w-5 fill-current" />
+                    </Button>
+                ) : (
+                    <div className="flex items-center gap-2">
+                         <span className="animate-pulse text-red-500 text-[10px] uppercase font-bold tracking-wider">REC</span>
+                         <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={stopRecording} 
+                            className="text-white hover:text-gray-300 h-8 w-8"
+                            title="Stop Recording"
+                        >
+                            <Square className="h-4 w-4 fill-current" />
+                        </Button>
+                    </div>
+                )}
+                
+                {!isRecording && history.length > 1 && (
+                     <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={exportRecording} 
+                        className="text-g-blue hover:text-g-blue/80 h-8 w-8"
+                        title="Export Recording"
+                    >
+                        <Download className="h-4 w-4" />
+                    </Button>
+                )}
+            </div>
+
             {/* Playback Controls */}
-            <div className="flex items-center gap-2 mx-auto md:mx-0 order-1">
+            <div className="flex items-center gap-2 mx-auto md:mx-0 order-1 md:order-2">
                 <Button variant="ghost" size="icon" onClick={resetSimulation} className="text-gray-400 hover:text-white h-8 w-8">
                     <RefreshCw className="h-4 w-4" />
                 </Button>
@@ -46,10 +90,10 @@ export const BottomControlBar: React.FC<BottomControlBarProps> = ({ onFocusNode 
                 </Button>
             </div>
 
-            <div className="hidden md:block h-8 w-px bg-white/10 order-2" />
+            <div className="hidden md:block h-8 w-px bg-white/10 order-2 md:order-3" />
 
             {/* Timeline */}
-            <div className="flex-1 w-full md:w-auto space-y-1 order-3 md:order-3 min-w-[200px]">
+            <div className="flex-1 w-full md:w-auto space-y-1 order-3 md:order-4 min-w-[200px]">
                 <div className="flex justify-between text-[10px] uppercase tracking-wider text-gray-500 font-mono">
                     <span>Genesis</span>
                     <span className="text-g-blue">Epoch {currentStepIndex}</span>
@@ -63,10 +107,10 @@ export const BottomControlBar: React.FC<BottomControlBarProps> = ({ onFocusNode 
                 />
             </div>
 
-            <div className="hidden md:block h-8 w-px bg-white/10 order-4" />
+            <div className="hidden md:block h-8 w-px bg-white/10 order-4 md:order-5" />
 
             {/* Jump to Node Input */}
-            <div className="flex items-center gap-2 mx-auto md:mx-0 order-2 md:order-5">
+            <div className="flex items-center gap-2 mx-auto md:mx-0 order-2 md:order-6">
                  <span className="text-[10px] text-gray-500 font-mono uppercase whitespace-nowrap">Focus</span>
                  <input 
                     type="text" 

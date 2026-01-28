@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rust WASM
+src/rust/**/target
+src/rust/**/pkg
+src/rust/**/*.wasm
+!src/rust/**/src/*.rs
+# Keep the source, ignore the build
