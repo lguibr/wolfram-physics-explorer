@@ -3,6 +3,12 @@ import { HypergraphState } from '@/types';
 import { createInitialState } from '@/services/physics/engine';
 import { RULE_REGISTRY } from '@/services/physics/registry';
 
+// Dynamic imports for workers
+// @ts-ignore
+import WrapperWorker from '@/services/worker?worker';
+// @ts-ignore
+import IdbWorker from '@/services/workers/idbWorker?worker'; // NEW
+
 interface SimulationContextType {
     // State
     history: HypergraphState[];
@@ -59,9 +65,15 @@ interface SimulationContextType {
 
     // Worker status
     isCalculating: boolean;
+    isWorkerReady: boolean;
+    initRenderer: (canvas: OffscreenCanvas) => void;
+    updateCamera: (x: number, y: number, z: number) => void;
+    resizeRenderer: (width: number, height: number) => void;
 }
 
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
+
+
 
 export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // 1. Core State
@@ -70,6 +82,7 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [isPlaying, setIsPlaying] = useState(false);
     const [isCalculating, setIsCalculating] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
+    const [isWorkerReady, setIsWorkerReady] = useState(false);
 
     // 2. Settings
     const [speedMs, setSpeedMs] = useState<number>(600);
@@ -95,81 +108,102 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const workerRef = useRef<Worker | null>(null);
     const recordingWorkerRef = useRef<Worker | null>(null);
     const playIntervalRef = useRef<number | null>(null);
+    const frameBuffer = useRef<any[]>([]); // Buffer for batch writes
 
     // Initialize Simulation Worker
     useEffect(() => {
-        workerRef.current = new Worker(new URL('../services/worker.ts', import.meta.url), { type: 'module' });
-        workerRef.current.onmessage = (e) => {
-            const nextState = e.data;
-            if (nextState) {
-                setHistory(prev => {
-                    const next = [...prev, nextState];
-                     // If recording, send the NEW state to the recorder
-                    if (isRecording && recordingWorkerRef.current) {
-                        recordingWorkerRef.current.postMessage({
-                            type: 'RECORD_FRAME',
-                            payload: {
-                                step: nextState.step,
-                                nodes: nextState.nodes,
-                                links: nextState.links
-                            }
-                        });
-                    }
-                    return next;
-                });
+        workerRef.current = new WrapperWorker();
+        setIsWorkerReady(true);
+        recordingWorkerRef.current = new IdbWorker();
+
+        workerRef.current!.onmessage = (e) => {
+            const { type, payload } = e.data;
+            if (type === 'TICK_COMPLETE') {
                 setIsCalculating(false);
-                setCurrentStepIndex(idx => idx + 1);
+                
+                // Update React State (UI Only)
+                setHistory(prev => {
+                    const mappedNodes = payload.nodes.map((n:any) => ({ id: n.id, x: n.x, y: n.y, z: n.z, val: n.val }));
+                    const newState: HypergraphState = {
+                        step: payload.step,
+                        nodes: mappedNodes, 
+                        links: payload.links,
+                        maxNodeId: payload.nodeCount 
+                    };
+                    const newHistory = [...prev, newState];
+                    setCurrentStepIndex(newHistory.length - 1);
+                    return newHistory;
+                });
+                
+                // RECORDING: Buffer frame
+                if (frameBuffer.current && isRecording) {
+                    frameBuffer.current.push({
+                         step: payload.step,
+                         nodes: payload.nodes,
+                         links: payload.links,
+                         timestamp: Date.now()
+                    });
+
+                    // Flush buffer every 60 frames (approx 1 sec)
+                    if (frameBuffer.current.length >= 60) {
+                        recordingWorkerRef.current?.postMessage({
+                            type: 'BATCH_INSERT',
+                            payload: { frames: frameBuffer.current }
+                        });
+                        frameBuffer.current = []; // Clear
+                    }
+                }
+                
+                // Done
+            } else if (type === 'ERROR') {
+                 setIsCalculating(false);
+                 console.error("Worker Error:", e.data.error);
             }
         };
-        workerRef.current.onerror = (err) => {
-            console.error("Worker Error Event:", err);
-            setIsCalculating(false);
-        };
-        return () => workerRef.current?.terminate();
-    }, [isRecording]); // Re-bind if recording state changes? Actually check isRecording inside ref is safer but state is fine here
-
-    // Initialize Recorder Worker
-    useEffect(() => {
-        recordingWorkerRef.current = new Worker(new URL('../services/workers/sqliteWorker.ts', import.meta.url), { type: 'module' });
-        recordingWorkerRef.current.onmessage = (e) => {
-             const { type, blob } = e.data;
-             if (type === 'EXPORT_READY' && blob) {
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `graph_recording_${new Date().toISOString()}.sqlite`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-             }
-        };
+                if (workerRef.current) {
+                    workerRef.current.onerror = (err: ErrorEvent) => {
+                        console.error("Worker Error Event:", err);
+                        setIsCalculating(false);
+                    };
+                }
         
-        recordingWorkerRef.current.postMessage({ type: 'INIT' });
+        if (recordingWorkerRef.current) {
+            recordingWorkerRef.current.onmessage = (e) => {
+                const { type, blob } = e.data;
+                if (type === 'EXPORT_READY' && blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `graph_recording_${new Date().toISOString()}.sqlite`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            };
+            recordingWorkerRef.current.postMessage({ type: 'INIT' });
+        }
 
-        return () => recordingWorkerRef.current?.terminate();
-    }, []);
+        return () => {
+             workerRef.current?.terminate();
+             recordingWorkerRef.current?.terminate();
+        };
+    }, []); // Re-bind if recording state changes? No, use ref for isRecording?
 
     const startRecording = () => {
         setIsRecording(true);
-        // Optional: Reset DB on start? Or append? Let's append for now, or maybe Reset is better for "New Recording"
-        // For simplicity, let's reset to ensure clean slate
         recordingWorkerRef.current?.postMessage({ type: 'RESET_DB' });
-        
-        // Also record current state as the initial frame
-         const currentState = history[currentStepIndex] || history[history.length - 1];
-         if (currentState && recordingWorkerRef.current) {
-             recordingWorkerRef.current.postMessage({
-                type: 'RECORD_FRAME',
-                payload: {
-                    step: currentState.step,
-                    nodes: currentState.nodes,
-                    links: currentState.links
-                }
-            });
-         }
+        frameBuffer.current = [];
     };
 
     const stopRecording = () => {
         setIsRecording(false);
+        // Flush remaining
+        if (frameBuffer.current.length > 0) {
+            recordingWorkerRef.current?.postMessage({
+                type: 'BATCH_INSERT',
+                payload: { frames: frameBuffer.current }
+            });
+            frameBuffer.current = [];
+        }
     };
 
     const exportRecording = () => {
@@ -193,11 +227,60 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         setIsCalculating(true);
         workerRef.current?.postMessage({
-            currentState: tipState,
-            ruleId: currentRuleId,
-            maxNodes: maxNodes
+            type: 'COMPUTE',
+            payload: {
+                currentState: tipState,
+                ruleId: currentRuleId,
+                maxNodes: maxNodes
+            }
         });
+
     }, [currentStepIndex, history, currentRuleId, maxNodes, isCalculating]);
+
+    // Update Physics Params dynamically
+    useEffect(() => {
+        if (workerRef.current) {
+            workerRef.current.postMessage({
+                type: 'UPDATE_PARAMS',
+                payload: {
+                    // Map sliders to physics params
+                    repulsion: 500.0, // Fixed for now, or map later if we add a slider
+                    drag: (1.0 - friction), // Friction -> Drag (0.3 friction = 0.7 drag)
+                    nodeSize: nodeSize * 5.0, // Scale up, base is 5.0
+                }
+            });
+        }
+    }, [friction, nodeSize]);
+    
+
+    
+    // Expose initRenderer
+    const initRenderer = useCallback((canvas: OffscreenCanvas) => {
+        if (workerRef.current) {
+            workerRef.current.postMessage({
+                type: 'INIT_RENDERER',
+                payload: { canvas }
+            }, [canvas]); // Transfer ownership
+        }
+    }, []);
+
+    const updateCamera = useCallback((x: number, y: number, z: number) => {
+        if (workerRef.current) {
+            workerRef.current.postMessage({
+                type: 'UPDATE_CAMERA',
+                payload: { x, y, z }
+            });
+        }
+    }, []);
+
+    const resizeRenderer = useCallback((width: number, height: number) => {
+        if (workerRef.current) {
+            workerRef.current.postMessage({
+                type: 'RESIZE',
+                payload: { width, height }
+            });
+        }
+    }, []);
 
     const stepBack = () => {
         if (currentStepIndex > 0) setCurrentStepIndex(prev => prev - 1);
@@ -302,7 +385,11 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             setCurrentRuleId,
             customRuleInput,
             setCustomRuleInput,
-            isCalculating
+            isCalculating,
+            isWorkerReady,
+            initRenderer,
+            updateCamera,
+            resizeRenderer
         }}>
             {children}
         </SimulationContext.Provider>

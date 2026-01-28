@@ -1,4 +1,4 @@
-import { HypergraphState, GraphNode, GraphLink } from '@/types';
+import { HypergraphState } from '@/types';
 
 
 /**

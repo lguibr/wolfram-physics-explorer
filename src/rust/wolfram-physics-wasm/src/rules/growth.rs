@@ -57,6 +57,12 @@ impl PhysicsRule for GrowthRule {
                     id: id.clone(),
                     group: step,
                     val: Some(1),
+                    x: node.x + (max_id % 10 - 5) as f32 * 0.1, // Slight jitter
+                    y: node.y + (max_id % 7 - 3) as f32 * 0.1,
+                    z: node.z + (max_id % 3 - 1) as f32 * 0.1,
+                    vx: 0.0,
+                    vy: 0.0,
+                    vz: 0.0,
                 });
                 
                 new_links.push(GraphLink {

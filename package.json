@@ -11,7 +11,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" && npm run rust:fmt",
     "test": "vitest && npm run rust:test",
     "rust:build": "cd src/rust/wolfram-physics-wasm && wasm-pack build --target web",
-    "rust:test": "cd src/rust/wolfram-physics-wasm && cargo test",
+    "rust:test": "node scripts/verify_wasm.js",
     "rust:lint": "cd src/rust/wolfram-physics-wasm && cargo clippy -- -D warnings",
     "rust:fmt": "cd src/rust/wolfram-physics-wasm && cargo fmt"
   },
@@ -23,6 +23,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "idb": "^8.0.3",
     "lucide-react": "^0.563.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
