@@ -1,11 +1,21 @@
 use crate::{GraphNode, GraphLink};
 use super::{EvolutionResult, PhysicsRule};
 
+/// A rule that implements exponential growth via node splitting (mitosis-like).
+///
+/// In each step, active nodes from the previous step are split into `branching_factor` new nodes.
 pub struct GrowthRule {
+    /// The number of new nodes created from each active node (e.g., 2 for binary fission).
     pub branching_factor: i32,
 }
 
 impl PhysicsRule for GrowthRule {
+    /// Applies the growth rule.
+    ///
+    /// Logic:
+    /// 1. Identify "active" nodes (those created in the previous step).
+    /// 2. For each active node, generate `branching_factor` new nodes.
+    /// 3. Create links from the parent node to these new child nodes.
     fn apply(
         &self,
         nodes: &[GraphNode],
