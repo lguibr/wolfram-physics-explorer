@@ -174,7 +174,7 @@ export const ControlSidebar: React.FC = () => {
                 <div className="space-y-5">
                     {/* Speed */}
                     <Slider
-                        label="Time Dilation"
+                        label="Simulation Speed"
                         value={speedMs}
                         min={0}
                         max={2000}
@@ -186,7 +186,7 @@ export const ControlSidebar: React.FC = () => {
 
                     {/* Max Nodes */}
                     <Slider
-                        label="Entropy Limit"
+                        label="Max Nodes (Entropy)"
                         value={maxNodes}
                         min={100}
                         max={5000}
@@ -198,7 +198,7 @@ export const ControlSidebar: React.FC = () => {
 
                      {/* Shadow Growth */}
                      <Slider
-                        label="Gravity Aura"
+                        label="Node Gravity Range"
                         value={Number(shadowGrowth.toFixed(5))}
                         min={1.00001}
                         max={1.5}
@@ -222,7 +222,7 @@ export const ControlSidebar: React.FC = () => {
 
                     {/* Emission Speed */}
                     <Slider
-                        label="Emission Velocity"
+                        label="Signal Speed"
                         value={emissionSpeed}
                         min={0.1}
                         max={5.0}
@@ -246,7 +246,7 @@ export const ControlSidebar: React.FC = () => {
                     
                      {/* Spacing */}
                      <Slider
-                        label="Lattice Spacing"
+                        label="Lattice Link Dist"
                         value={linkDistance}
                         min={10}
                         max={200}
@@ -284,7 +284,7 @@ export const ControlSidebar: React.FC = () => {
 
                     {/* Particle Density */}
                     <Slider
-                        label="Photon Density"
+                        label="Signal Density"
                         value={particleCount}
                         min={0}
                         max={5}
@@ -296,12 +296,12 @@ export const ControlSidebar: React.FC = () => {
 
                     {/* Particle Size */}
                     <Slider
-                        label="Photon Size"
+                        label="Signal Particle Size"
                         value={particleSize}
                         min={0.01}
                         max={2.0}
                         step={0.01}
-                        valueDisplay={`${particleSize.toFixed(2)}x Node`}
+                        valueDisplay={`${particleSize.toFixed(2)}x`}
                         onChange={(e) => setParticleSize(parseFloat(e.target.value))}
                         className="[&::-webkit-slider-thumb]:border-g-yellow"
                     />

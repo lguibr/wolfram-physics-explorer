@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import GraphVisualizer from './components/graph/GraphVisualizer';
 import { ControlSidebar } from './components/controls/ControlSidebar';
 import { StatsDisplay } from './components/controls/StatsDisplay';
@@ -7,47 +7,48 @@ import { SimulationProvider, useSimulation } from './context/SimulationContext';
 import { Button } from './components/ui/button';
 import { Settings, X } from 'lucide-react';
 
-// Inner component to access context
-const AppContent: React.FC = () => {
-  const { 
-    currentState, 
-    shadowGrowth,
-    nodeSize,
-    auraOpacity,
-    emissionSpeed,
-    linkDistance,
-    particleSize,
-    linkWidth,
-    linkOpacity,
-    particleCount,
-    friction,
-    autoRotateSpeed
-  } = useSimulation();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const graphVisualizerRef = useRef<any>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // Inner component to access context
+  const AppContent: React.FC = () => {
+    const { 
+        currentState, 
+        shadowGrowth, 
+        nodeSize, 
+        auraOpacity, 
+        emissionSpeed,
+        linkDistance,
+        particleSize,
+        linkWidth,
+        linkOpacity,
+        particleCount,
+        maxNodes, // Used as pseudo-entropy
+        friction,
+        autoRotateSpeed
+    } = useSimulation();
+    
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const graphContainerRef = React.useRef<HTMLDivElement>(null);
+
+    const extraVisualProps = {
+        shadowGrowth,
+        nodeSize,
+        auraOpacity,
+        emissionSpeed,
+        linkDistance,
+        particleSize,
+        linkWidth,
+        linkOpacity,
+        particleCount, 
+        entropy: maxNodes / 5000, 
+        signalSpeed: 1, // Default fallback
+        friction,
+        autoRotateSpeed
+    };
 
   // CSS Grid Layout (Desktop):
   // Col 1: Sidebar (320px)
   // Col 2: Graph (1fr)
   // Row 1: Main Content (1fr)
   // Row 2: Footer (Auto)
-  const extraVisualProps = React.useMemo(() => ({
-      shadowGrowth,
-      nodeSize,
-      auraOpacity,
-      emissionSpeed,
-      linkDistance,
-      particleSize,
-      linkWidth,
-      linkOpacity,
-      particleCount,
-      friction,
-      autoRotateSpeed
-  }), [
-      shadowGrowth, nodeSize, auraOpacity, emissionSpeed, linkDistance,
-      particleSize, linkWidth, linkOpacity, particleCount, friction, autoRotateSpeed
-  ]);
 
   return (
     <div className="w-screen h-screen bg-cosmic-dark font-sans text-white select-none overflow-hidden flex flex-col md:grid md:grid-cols-[320px_1fr] md:grid-rows-[1fr_auto]">
@@ -94,14 +95,12 @@ const AppContent: React.FC = () => {
       )}
 
       {/* AREA 2: MAIN GRAPH (Right) */}
-      <div className="relative flex-1 bg-black/50 overflow-hidden md:order-2">
-          {/* 3D Canvas */}
-          <GraphVisualizer 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ref={graphVisualizerRef as any} 
-            data={currentState} 
-            extraVisualProps={extraVisualProps} 
-          />
+      {/* AREA 2: MAIN GRAPH (Right) */}
+      <div className="relative flex-1 bg-black/50 overflow-hidden md:order-2" ref={graphContainerRef}>
+          <GraphVisualizer
+               data={currentState}
+               extraVisualProps={extraVisualProps}
+           />
           
           <StatsDisplay />
       </div>
@@ -109,7 +108,7 @@ const AppContent: React.FC = () => {
       {/* AREA 3: FOOTER (Bottom, Spans All) */}
       <div className="border-t border-white/10 bg-black/90 backdrop-blur-xl z-30 flex items-center justify-center p-4 md:col-span-2 md:order-3">
            <BottomControlBar 
-             onFocusNode={(id) => graphVisualizerRef.current?.focusNode(id)}
+             onFocusNode={(id) => console.log("Focus: " + id)}
            />
       </div>
 

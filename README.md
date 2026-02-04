@@ -1,38 +1,43 @@
-# 🌌 Wolfram Physics Explorer
-
-> **Simulating the computational universe, one hypergraph at a time.**
+# Wolfram Physics Explorer
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Three.js](https://img.shields.io/badge/Three.js-black?style=for-the-badge&logo=three.js&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-Coverage_60%25-green?style=for-the-badge)
 
-A high-performance, GPU-accelerated visualization engine for **Wolfram Physics Project** models. Explore how simple graph rewriting rules can give rise to complex structures like spacetime, black holes, and quantum mechanics.
+<div align="center">
+  <img src="./public/logo.png" width="25%" />
+</div>
 
+A high-performance, GPU-accelerated visualization engine for **Wolfram Physics Project** models. Explore how simple graph rewriting rules can give rise to complex structures like spacetime, black holes, and quantum mechanics.
 
 <div align="center">
   <img src="./public/demo-1.png" width="48%" />
   <img src="./public/demo-2.png" width="48%" />
 </div>
 
-
 ## ✨ Key Features
 
 ### 🚀 Advanced Physics Engine
+
 - **Stochastic Rewriting**: Real-time graph transformation based on Wolfram's localized rules.
 - **Genesis Protocol**: Automatic mass injection prevents "heat death" in small universes.
 - **High-Performance**: Off-main-thread Web Worker calculation loop for smooth 60fps rendering even at 1000+ nodes.
 
 ### 🎨 Cinematic Visualization
+
 - **Glasmorphic Rendering**: Beautiful, transparent nodes with emissive cores.
 - **Dynamic Physics**: Interactive force-directed layout with adjustable gravity, friction, and link distance.
 - **Cosmic Effects**: Toggle particle emissions, shadow propagation, and aura opacity.
 
 ### 🛠️ Custom Rule Playground
+
 Design your own universe! The built-in parser supports standard Wolfram signature syntax:
+
 ```wolfram
 {{x,y},{u,v}} -> {{x,u},{y,v},{x,y}}
 ```
+
 Watch as your abstract rule builds geometry before your eyes.
 
 ## 📦 Installation
