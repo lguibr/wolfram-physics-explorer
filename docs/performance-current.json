@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-11T18:25:57-03:00",
+  "timeZone": "America/Sao_Paulo",
+  "checkout": "/Users/lg/lab/wolfram-physics/wolfram-physics-explorer",
+  "head": "e83d0ae6d980b044ce0c2ca8bbf5be4cbf686f9b",
+  "sources": {
+    "src/services/physics/model.ts": "8e2ece88ca33c56ca84c1c6ca923949368a3218f5f09571313b958aec96e7b5c",
+    "src/services/physics/customRuleParser.ts": "952700010e022c11f2c3552ec993bd2f6e936318bb7b22cd4b2ca3b7265c903b",
+    "src/services/physics/types.ts": "608aa27208034ba9f29756ba7bd5a999d3979b98e9480b5856ea0658829afb10",
+    "src/services/physics/registry.ts": "ef5c8af21a0fcde482743e536dffb6be98c9db4279a1c610da4f6288f546bd94"
+  },
+  "runtime": {
+    "node": "v22.21.1",
+    "v8": "12.4.254.21-node.33",
+    "esbuild": "0.25.12"
+  },
+  "hardware": {
+    "platform": "darwin",
+    "release": "25.6.0",
+    "arch": "arm64",
+    "cpuModel": "Apple M3 Pro",
+    "logicalCpus": 12,
+    "memoryBytes": 19327352832
+  },
+  "methodology": {
+    "ordering": "First complete match in rule-input order, oldest edge occurrence first",
+    "limits": {
+      "maxNodes": 100000,
+      "maxEdges": 100000,
+      "maxEvents": 10000,
+      "maxMatchChecks": 20000000
+    },
+    "warmup": 2,
+    "samples": 7,
+    "clock": "performance.now",
+    "percentile": "nearest rank",
+    "timedRegion": "findMatch or runEvents only; excludes bundling, parsing, fixture creation, hashing and report I/O",
+    "isolation": "single process; GC and OS scheduling remain uncontrolled",
+    "candidateChecks": "matcher-reported candidate examinations; index construction is included in timed work but not in candidate-check counts",
+    "correctness": "all warmup and measured results deterministic; inputs unchanged; canonical join consumption and requested event completion asserted; semantic digests exclude searchChecks"
+  },
+  "workloads": [
+    {
+      "name": "join-late-match-50",
+      "inputDigest": "f5dca41c10f644479b250fe6a1483edfda653704ddc4e3d47e95c05c53f50958",
+      "operation": "findMatch",
+      "signature": "{{x,y},{y,z}} -> {{x,z}}",
+      "decoyEdges": 50,
+      "inputEdges": 52,
+      "candidateChecks": 52,
+      "consumedEdgeIds": [
+        "e50",
+        "e51"
+      ],
+      "bindings": [
+        [
+          "x",
+          "join-start"
+        ],
+        [
+          "y",
+          "join-middle"
+        ],
+        [
+          "z",
+          "join-end"
+        ]
+      ],
+      "exhausted": false,
+      "semanticDigest": "f90cb920e426fe04375d690dd635e115790e30703c34cfa4916e18d748ba9675",
+      "samplesMs": [
+        0.039041999999994914,
+        0.03829199999999844,
+        0.08920799999999929,
+        0.04329199999999389,
+        0.037208999999990056,
+        0.030457999999995877,
+        0.030291000000005397
+      ],
+      "medianMs": 0.03829199999999844,
+      "p95Ms": 0.08920799999999929,
+      "minMs": 0.030291000000005397,
+      "maxMs": 0.08920799999999929
+    },
+    {
+      "name": "join-late-match-250",
+      "inputDigest": "926fa95c445137159dd62c34b1a9fd4bd6877956f9c7674159edab6030b4868f",
+      "operation": "findMatch",
+      "signature": "{{x,y},{y,z}} -> {{x,z}}",
+      "decoyEdges": 250,
+      "inputEdges": 252,
+      "candidateChecks": 252,
+      "consumedEdgeIds": [
+        "e250",
+        "e251"
+      ],
+      "bindings": [
+        [
+          "x",
+          "join-start"
+        ],
+        [
+          "y",
+          "join-middle"
+        ],
+        [
+          "z",
+          "join-end"
+        ]
+      ],
+      "exhausted": false,
+      "semanticDigest": "14586b66b291b4dfc133e42065f6e129e8d2e87cf1506d99eab0cc60f469bfe9",
+      "samplesMs": [
+        0.3146250000000066,
+        0.36020899999999756,
+        0.35712499999999636,
+        0.34483400000000586,
+        0.6405829999999924,
+        1.3619999999999948,
+        0.4269170000000031
+      ],
+      "medianMs": 0.36020899999999756,
+      "p95Ms": 1.3619999999999948,
+      "minMs": 0.3146250000000066,
+      "maxMs": 1.3619999999999948
+    },
+    {
+      "name": "join-late-match-1000",
+      "inputDigest": "63798b409a44d93e77e8a0133e298ac3592849d007c3bda0ba38dad88e018514",
+      "operation": "findMatch",
+      "signature": "{{x,y},{y,z}} -> {{x,z}}",
+      "decoyEdges": 1000,
+      "inputEdges": 1002,
+      "candidateChecks": 1002,
+      "consumedEdgeIds": [
+        "e1000",
+        "e1001"
+      ],
+      "bindings": [
+        [
+          "x",
+          "join-start"
+        ],
+        [
+          "y",
+          "join-middle"
+        ],
+        [
+          "z",
+          "join-end"
+        ]
+      ],
+      "exhausted": false,
+      "semanticDigest": "4e399f3b03bf464453b7c51a3ad0784c7c7165c7d23faeaf7a7a855c012bfe4d",
+      "samplesMs": [
+        2.22175,
+        0.7041660000000007,
+        1.1995000000000005,
+        0.7142499999999927,
+        1.1026250000000033,
+        0.5516250000000014,
+        0.8113750000000124
+      ],
+      "medianMs": 0.8113750000000124,
+      "p95Ms": 2.22175,
+      "minMs": 0.5516250000000014,
+      "maxMs": 2.22175
+    },
+    {
+      "name": "wm148-1000-events",
+      "inputDigest": "3c5f528ae5a7375b9acab35ec69c2028fdf1127d7b61484a8f63a9bfcc268ff7",
+      "operation": "runEvents",
+      "signature": "{{x,y}} -> {{x,y},{y,z}}",
+      "seed": [
+        [
+          "1",
+          "1"
+        ]
+      ],
+      "requestedEvents": 1000,
+      "completedEvents": 1000,
+      "candidateChecks": 1000,
+      "status": "ready",
+      "outputEdges": 1001,
+      "outputAtoms": 1001,
+      "outputEvents": 1000,
+      "lastConsumedEdgeIds": [
+        "e999"
+      ],
+      "semanticDigest": "74c7a26d628289a4be9652745da867d050497bdf625d749e73102bc070737608",
+      "samplesMs": [
+        107.68570799999998,
+        102.235792,
+        83.14320799999996,
+        63.492500000000064,
+        66.71233399999994,
+        73.454834,
+        74.31395900000007
+      ],
+      "medianMs": 74.31395900000007,
+      "p95Ms": 107.68570799999998,
+      "minMs": 63.492500000000064,
+      "maxMs": 107.68570799999998
+    },
+    {
+      "name": "setreplace-ternary-100-events",
+      "inputDigest": "3981a6b1e9eb2614c75c783185591db291e99488712fe79de7568d32eb29ecff",
+      "operation": "runEvents",
+      "signature": "{{a,b,c},{b,d,e}} -> {{e,f,a},{f,d,b},{d,e,c}}",
+      "seed": [
+        [
+          "1",
+          "2",
+          "3"
+        ],
+        [
+          "2",
+          "4",
+          "5"
+        ],
+        [
+          "4",
+          "6",
+          "7"
+        ]
+      ],
+      "requestedEvents": 100,
+      "completedEvents": 100,
+      "candidateChecks": 5150,
+      "status": "ready",
+      "outputEdges": 103,
+      "outputAtoms": 107,
+      "outputEvents": 100,
+      "lastConsumedEdgeIds": [
+        "e297",
+        "e298"
+      ],
+      "semanticDigest": "7d55532c570414f1f9c0f7e05103ad34d24b4611ef789b14bf4f6d840bde1b77",
+      "samplesMs": [
+        4.792374999999993,
+        5.01495900000009,
+        5.6340000000000146,
+        3.205916000000002,
+        7.723458000000051,
+        5.322166000000038,
+        5.0757919999999785
+      ],
+      "medianMs": 5.0757919999999785,
+      "p95Ms": 7.723458000000051,
+      "minMs": 3.205916000000002,
+      "maxMs": 7.723458000000051
+    }
+  ]
+}

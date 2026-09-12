@@ -1,15 +1,23 @@
-# Physics Service
+# Physics service
 
-This directory contains the TypeScript implementation and interfaces for the physics engine.
-Note: The core calculation logic is being migrated to Rust (WASM), but these files define the types and fallback logic.
+TypeScript implementation of ordered hypergraph rewriting. Everything runs in the browser or in the Web Worker; there is no Rust or WebAssembly component.
 
-## Key Files
+## Active modules
 
-- **[engine.ts](./engine.ts)**: Validates state and applies rules (TS fallback).
-- **[types.ts](./types.ts)**: Defines `PhysicsRule`, `GraphNode`, and `GraphLink` interfaces.
-- **[registry.ts](./registry.ts)**: Central registry for all available physics rules.
-- **[customRuleParser.ts](./customRuleParser.ts)**: Parser for Wolfram-style rule signatures (e.g., `{{x,y}} -> {{x,z}}`).
+| File | Exports | Role |
+| --- | --- | --- |
+| `types.ts` | `Hyperedge`, `RewriteEvent`, `ModelState`, `ModelLimits`, `ModelDefinition`, `CompiledRule`, `StopReason`; `PhysicsRule` only for the legacy modules below | Immutable state contract: ordered tuples with occurrence IDs, events with inputs, outputs, parents and generation, monotonic ID counters and a stop reason. |
+| `model.ts` | `createModelState`, `findMatch`, `rewriteOnce`, `runEvents`, `DEFAULT_LIMITS`, `ORDERING` | Seed validation, first-complete-match search with arity and bound-position indexes for multi-input rules, atomic rewrite with fresh atoms, causal parents, generation and batch execution under limits. |
+| `customRuleParser.ts` | `parseRelations`, `compileRule`, `formatRelations` | Strict parser for `{{...},{...}} -> {{...}}` signatures and relation lists. |
+| `registry.ts` | `RULE_REGISTRY`, `getRuleById` | Source-backed reference models with explicit seeds. Unknown IDs throw. |
+| `metrics.ts` | `measureGraph`, `summarizeSamples` | Structural measurements of a state and median/p95 of timing samples. |
 
-## Usage
+Semantics, scheduling convention and limits are described in the repository README. The matcher's search budget is counted in candidate examinations; index construction is timed but not counted.
 
-The `evolveUniverse` function is the main entry point, taking the current state and returning the next state.
+## Tests
+
+`model.test.ts` (semantics, fixtures, limits, matcher equivalence against an independent permutation reference), `__tests__/customRuleParser.test.ts`, `__tests__/engine.test.ts` and `engine.test.ts` (presets and compatibility wrappers), `metrics.test.ts`.
+
+## Compatibility only
+
+`engine.ts` wraps `createModelState` and `rewriteOnce` for older call sites and is used only by its tests. `parseAndApplyCustomRule` in the parser adapts the model to the legacy node/link delta shape. `rules/*.ts` and `utils/ids.ts` are legacy callback modules that the application does not import.

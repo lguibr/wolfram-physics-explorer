@@ -1,53 +1,22 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createInitialState, evolveUniverse } from '../engine';
-import { RULE_REGISTRY } from '../registry';
+import { RULE_REGISTRY, getRuleById } from '../registry';
+import { compileRule } from '../customRuleParser';
+import { rewriteOnce } from '../model';
 
-describe('Physics Engine', () => {
-    it('creates valid initial state', () => {
-        const state = createInitialState();
-        expect(state.nodes.length).toBe(1);
-        expect(state.links.length).toBe(0);
-        expect(state.step).toBe(0);
-        expect(state.maxNodeId).toBe(1);
-    });
-
-    it('evolves state using a preset rule', () => {
-        const initialState = createInitialState();
-        // Use first rule (Inflation)
-        const ruleId = RULE_REGISTRY[0].id; // Big Bang / Inflation
-        
-        // Step 1
-        const nextState = evolveUniverse(initialState, ruleId, 100);
-        
-        // Inflation usually adds nodes
-        expect(nextState.nodes.length).toBeGreaterThan(initialState.nodes.length);
-        expect(nextState.step).toBe(1);
-        expect(nextState.maxNodeId).toBeGreaterThan(initialState.maxNodeId);
-    });
-
-    it('respects max nodes limit', () => {
-        const state = createInitialState();
-        state.nodes = Array(10).fill(null).map((_, i) => ({ id: i.toString(), group: 0 }));
-        
-        const maxNodes = 5;
-        // Should not evolve if we are already over limit? 
-        // Logic: if (currentState.nodes.length >= maxNodesLimit) return currentState;
-        
-        const nextState = evolveUniverse(state, RULE_REGISTRY[0].id, maxNodes);
-        
-        expect(nextState.nodes.length).toBe(10); // Unchanged
-        expect(nextState).toEqual(state);
-    });
-    
-    it('evolves with wormhole rule (checking genesis)', () => {
-        const state = createInitialState();
-        // Wormhole rule id
-        const rule = RULE_REGISTRY.find(r => r.name.includes('Einstein'));
-        if (!rule) throw new Error('Wormhole rule not found');
-
-        const nextState = evolveUniverse(state, rule.id, 100);
-        
-        // Should trigger genesis (add nodes) because start is 1 node
-        expect(nextState.nodes.length).toBeGreaterThan(1);
-    });
+describe('published preset definitions', () => {
+  it('starts from the selected explicit seed', () => {
+    for (const rule of RULE_REGISTRY) expect(createInitialState(rule.id).edges.map(e => e.atoms)).toEqual(rule.seed);
+  });
+  it('executes exactly the signature shown for every preset', () => {
+    for (const rule of RULE_REGISTRY) {
+      const state = createInitialState(rule.id);
+      expect(evolveUniverse(state, rule.id, 100)).toEqual(rewriteOnce(state, compileRule(rule.signature), { maxNodes: 100 }));
+      expect(rule.source).toMatch(/^https:\/\//);
+    }
+  });
+  it('rejects unknown IDs without falling back to another universe', () => {
+    expect(() => getRuleById('not-a-rule')).toThrow();
+    expect(() => evolveUniverse(createInitialState(), 'not-a-rule')).toThrow();
+  });
 });

@@ -1,56 +1,24 @@
-import React from 'react';
-import { HypergraphState } from '@/types';
-import GraphRenderer from './GraphRenderer';
+import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
+import GraphRenderer, { type GraphRendererProps } from './GraphRenderer';
 
-import { GraphRendererHandle, VisualProps } from './GraphRenderer';
-
-interface GraphVisualizerProps {
-  data: HypergraphState;
-  extraVisualProps?: VisualProps;
+class GraphBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() {
+    return this.state.failed ? <div className="graph-empty" role="alert">3D rendering is unavailable in this browser. The relation inspector and computation controls remain available.</div> : this.props.children;
+  }
 }
-
-const GraphVisualizer = React.forwardRef<GraphRendererHandle, GraphVisualizerProps>(({ data, extraVisualProps }, ref) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = React.useState({ width: window.innerWidth, height: window.innerHeight });
-
-  React.useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setDimensions(prev => {
-             // Precise check to avoid re-renders on sub-pixel jitter or redundant callbacks
-             if (Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1) return prev;
-             return { width, height };
-        });
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
-    
-    // Initial size
-    setDimensions({ 
-        width: containerRef.current.clientWidth, 
-        height: containerRef.current.clientHeight 
-    });
-
-    return () => resizeObserver.disconnect();
+export default function GraphVisualizer(props: Omit<GraphRendererProps, 'width' | 'height'>) {
+  const container = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => setSize({ width: Math.floor(entry.contentRect.width), height: Math.floor(entry.contentRect.height) }));
+    if (container.current) observer.observe(container.current);
+    return () => observer.disconnect();
   }, []);
-
-  return (
-    <div ref={containerRef} className="w-full h-full absolute inset-0 bg-cosmic-dark overflow-hidden">
-        {/* Always render, with at least fallback dimensions if 0 */}
-        <GraphRenderer 
-          ref={ref} 
-          data={data} 
-          extraVisualProps={extraVisualProps} 
-          width={dimensions.width || 800} // Fallback to avoid hidden renderer
-          height={dimensions.height || 600}
-        />
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,5,8,0.6)_100%)]"></div>
-    </div>
-  );
-});
-
-export default GraphVisualizer;
+  return <div className="graph-canvas" ref={container} aria-label={props.view === 'spatial' ? '3D ordered hypergraph' : '3D aggregated causal dependencies'}>
+    {size.width > 0 && size.height > 0 && <GraphBoundary><GraphRenderer {...props} {...size} /></GraphBoundary>}
+    {props.view === 'causal' && !props.data.events.length && <div className="graph-empty">No events yet.<br /><small>Apply a rewrite to see its causal history.</small></div>}
+    {props.view === 'spatial' && !props.data.edges.length && <div className="graph-empty">The relation multiset is empty.</div>}
+  </div>;
+}

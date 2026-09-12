@@ -5,17 +5,14 @@ export interface GraphNode {
 }
 
 export interface GraphLink {
-  source: string;
-  target: string;
+  id?: string;
+  source: string; // Keep for legacy/binary
+  target: string; // Keep for legacy/binary
+  nodes?: string[]; // Support for hyperedges
   type?: string; // e.g., 'spatial', 'causal'
 }
 
-export interface HypergraphState {
-  nodes: GraphNode[];
-  links: GraphLink[];
-  step: number;
-  maxNodeId: number;
-}
+export type HypergraphState = import('./services/physics/types').ModelState;
 
 export interface AnalysisResult {
   summary: string;

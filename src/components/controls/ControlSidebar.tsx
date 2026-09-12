@@ -1,336 +1,55 @@
-import React from 'react';
-import { Slider } from '@/components/ui/slider';
-import { RULE_REGISTRY } from '@/services/physics/registry';
-import { Cpu } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useSimulation } from '@/context/SimulationContext';
-import { useDebounce } from '@/hooks/useDebounce';
-import { parseAndApplyCustomRule } from '@/services/physics/customRuleParser';
-import { GraphNode, GraphLink } from '@/types';
+import { RULE_REGISTRY } from '@/services/physics/registry';
+import { compileRule, parseRelations, formatRelations } from '@/services/physics/customRuleParser';
+import { ArrowUpRight, Check, RotateCcw } from 'lucide-react';
 
-export const ControlSidebar: React.FC = () => {
-    const {
-        // Config State
-        currentRuleId,
-        setCurrentRuleId,
-        speedMs,
-        setSpeedMs,
-        maxNodes,
-        setMaxNodes,
-        shadowGrowth,
-        setShadowGrowth,
-        customRuleInput,
-        setCustomRuleInput,
-        nodeSize,
-        setNodeSize,
-        emissionSpeed,
-        setEmissionSpeed,
-        auraOpacity,
-        setAuraOpacity,
-        linkDistance,
-        setLinkDistance,
-        particleSize,
-        setParticleSize,
-        linkWidth,
-        setLinkWidth,
-        linkOpacity,
-        setLinkOpacity,
-        particleCount,
-        setParticleCount,
-        friction,
-        setFriction,
-        autoRotateSpeed,
-        setAutoRotateSpeed
-    } = useSimulation();
-
-    const activeRule = RULE_REGISTRY.find(r => r.id === currentRuleId);
-    
-    // Group rules by category for display
-    const categories = Array.from(new Set(RULE_REGISTRY.map(r => r.category)));
-
-    const handleCustomRuleSubmit = (val: string) => {
-        // Use current validation state
-        if (!val || !isRuleValid) return;
-        
-        // Simple Parser for Wolfram-style signature
-        const id = `custom_${Date.now()}`;
-        
-        const newRule = {
-            id,
-            name: `Custom: ${val.substring(0, 15)}...`,
-            category: 'CUSTOM',
-            description: val,
-            apply: (nodes: GraphNode[], links: GraphLink[], maxId: number, step: number) => {
-                return parseAndApplyCustomRule(val, nodes, links, maxId, step);
-            }
-        };
-        
-        // Register and Select
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (RULE_REGISTRY as any).unshift(newRule);
-        setCurrentRuleId(id);
-    };
-
-    const [isRuleValid, setIsRuleValid] = React.useState(false);
-    const debouncedRuleInput = useDebounce(customRuleInput, 300);
-
-    React.useEffect(() => {
-        // Robust Validation Logic
-        const validate = (val: string) => {
-             if (!val.includes('->')) return false;
-             // Check braces balance
-             const open = (val.match(/\{/g) || []).length;
-             const close = (val.match(/\}/g) || []).length;
-             if (open !== close || open < 2) return false;
-             
-             // Check structure: {{...}} -> {{...}}
-             const parts = val.split('->');
-             if (parts.length !== 2) return false;
-             if (!parts[0].trim().startsWith('{{') || !parts[1].trim().endsWith('}}')) return false;
-             
-             return true;
-        };
-        setIsRuleValid(validate(debouncedRuleInput));
-    }, [debouncedRuleInput]);
-
-    return (
-        <div className="w-full h-full space-y-4 pointer-events-auto flex flex-col p-4">
-            <div className="flex-1 space-y-6">
-                {/* Header */}
-                <div className="flex items-center gap-3 text-g-blue">
-                    <div className="p-2 bg-g-blue/10 rounded-lg">
-                        <Cpu className="h-5 w-5" />
-                    </div>
-                    <div>
-                        <h2 className="font-bold text-sm tracking-widest uppercase text-white">Engine Control</h2>
-                        <div className="text-[10px] text-gray-400 font-mono">Run: {currentRuleId.substring(0, 12)}...</div>
-                    </div>
-                </div>
-
-                <div className="h-px bg-white/10" />
-
-                <div className="h-px bg-white/10" />
-
-                {/* Native Select for Reliability */}
-                <div className="space-y-2">
-                    <label className="text-xs text-gray-400 font-mono uppercase tracking-wider">Physics Signature</label>
-                    <div className="relative">
-                        <select 
-                            value={currentRuleId}
-                            onChange={(e) => setCurrentRuleId(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-xs text-white appearance-none outline-none focus:border-g-blue/50 cursor-pointer hover:bg-white/10"
-                        >
-                             {categories.map(cat => (
-                                <optgroup key={cat} label={cat}>
-                                    {RULE_REGISTRY.filter(r => r.category === cat).map(rule => (
-                                        <option key={rule.id} value={rule.id}>{rule.name}</option>
-                                    ))}
-                                </optgroup>
-                             ))}
-                        </select>
-                        <div className="absolute right-3 top-2.5 pointer-events-none opacity-50">
-                            <span className="text-[10px]">▼</span>
-                        </div>
-                    </div>
-                    
-                    <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-400 leading-relaxed font-mono min-h-[3em]">
-                         {activeRule?.description}
-                    </div>
-                </div>
-
-                <div className="h-px bg-white/10" />
-
-                {/* Custom Rule Input (Auto-filled) */}
-                 <div className="space-y-3">
-                     <div className="flex justify-between items-center">
-                         <label className="text-xs text-gray-400 font-mono uppercase tracking-wider">Rule</label>
-                         {customRuleInput.length > 0 && (
-                             <span className={`text-[10px] font-bold uppercase transition-opacity ${isRuleValid ? 'text-green-400' : 'text-red-400'}`}>
-                                 {isRuleValid ? 'Valid' : 'Invalid Syntax'}
-                             </span>
-                         )}
-                     </div>
-                     <input 
-                        type="text" 
-                        value={customRuleInput}
-                        onChange={(e) => setCustomRuleInput(e.target.value)}
-                        onKeyDown={(e) => {
-                             if (e.key === 'Enter' && isRuleValid) handleCustomRuleSubmit(customRuleInput);
-                        }}
-                        placeholder="{{x,y}} -> {{x,z},{z,y}}"
-                        className={`w-full bg-white/5 border rounded-md px-3 py-2 text-xs font-mono text-white placeholder:text-gray-600 outline-none transition-colors
-                            ${customRuleInput.length > 0 
-                                ? (isRuleValid ? 'border-green-500/50 focus:border-green-500' : 'border-red-500/50 focus:border-red-500')
-                                : 'border-white/10 focus:border-g-blue/50'
-                            }
-                        `}
-                     />
-                     <p className="text-[10px] text-gray-500">
-                         Modify and press Enter to inject.
-                     </p>
-                 </div>
-
-                <div className="h-px bg-white/10" />
-
-                <div className="space-y-5">
-                    {/* Speed */}
-                    <Slider
-                        label="Simulation Speed"
-                        value={speedMs}
-                        min={0}
-                        max={2000}
-                        step={10}
-                        valueDisplay={`${speedMs}ms`}
-                        onChange={(e) => setSpeedMs(parseInt(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-yellow"
-                    />
-
-                    {/* Max Nodes */}
-                    <Slider
-                        label="Max Nodes (Entropy)"
-                        value={maxNodes}
-                        min={100}
-                        max={5000}
-                        step={100}
-                        valueDisplay={maxNodes}
-                        onChange={(e) => setMaxNodes(parseInt(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-red"
-                    />
-
-                     {/* Shadow Growth */}
-                     <Slider
-                        label="Node Gravity Range"
-                        value={Number(shadowGrowth.toFixed(5))}
-                        min={1.00001}
-                        max={1.5}
-                        step={0.00001}
-                        valueDisplay={`${((shadowGrowth - 1) * 100).toFixed(3)}%`}
-                        onChange={(e) => setShadowGrowth(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-blue"
-                    />
-
-                     {/* Node Size */}
-                    <Slider
-                        label="Node Size"
-                        value={nodeSize}
-                        min={0.1}
-                        max={3.0}
-                        step={0.1}
-                        valueDisplay={`${nodeSize.toFixed(1)}x`}
-                        onChange={(e) => setNodeSize(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-purple"
-                    />
-
-                    {/* Emission Speed */}
-                    <Slider
-                        label="Signal Speed"
-                        value={emissionSpeed}
-                        min={0.1}
-                        max={5.0}
-                        step={0.1}
-                        valueDisplay={`${emissionSpeed.toFixed(1)}x`}
-                        onChange={(e) => setEmissionSpeed(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-cyan"
-                    />
-
-                    {/* Aura Opacity */}
-                    <Slider
-                        label="Aura Opacity"
-                        value={auraOpacity}
-                        min={0.05}
-                        max={1.0}
-                        step={0.05}
-                        valueDisplay={`${(auraOpacity * 100).toFixed(0)}%`}
-                        onChange={(e) => setAuraOpacity(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-green"
-                    />
-                    
-                     {/* Spacing */}
-                     <Slider
-                        label="Lattice Link Dist"
-                        value={linkDistance}
-                        min={10}
-                        max={200}
-                        step={5}
-                        valueDisplay={`${linkDistance}px`}
-                        onChange={(e) => setLinkDistance(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-white"
-                    />
-
-                    {/* --- PHASE 3: ADVANCED VISUALS --- */}
-                    
-                    {/* Link Opacity */}
-                    <Slider
-                        label="Link Visibility"
-                        value={linkOpacity}
-                        min={0}
-                        max={1}
-                        step={0.05}
-                        valueDisplay={`${(linkOpacity * 100).toFixed(0)}%`}
-                        onChange={(e) => setLinkOpacity(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-gray-400"
-                    />
-
-                    {/* Link Width */}
-                    <Slider
-                        label="Link Width"
-                        value={linkWidth}
-                        min={0.1}
-                        max={5.0}
-                        step={0.1}
-                        valueDisplay={`${linkWidth.toFixed(1)}px`}
-                        onChange={(e) => setLinkWidth(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-gray-400"
-                    />
-
-                    {/* Particle Density */}
-                    <Slider
-                        label="Signal Density"
-                        value={particleCount}
-                        min={0}
-                        max={5}
-                        step={1}
-                        valueDisplay={`${particleCount} / link`}
-                        onChange={(e) => setParticleCount(parseInt(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-yellow"
-                    />
-
-                    {/* Particle Size */}
-                    <Slider
-                        label="Signal Particle Size"
-                        value={particleSize}
-                        min={0.01}
-                        max={2.0}
-                        step={0.01}
-                        valueDisplay={`${particleSize.toFixed(2)}x`}
-                        onChange={(e) => setParticleSize(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-yellow"
-                    />
-
-                    {/* Friction */}
-                    <Slider
-                        label="Damping (Friction)"
-                        value={friction}
-                        min={0}
-                        max={1.0}
-                        step={0.01}
-                        valueDisplay={`${friction.toFixed(2)} Drag`}
-                        onChange={(e) => setFriction(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-red"
-                    />
-
-                    {/* Auto Rotate */}
-                    <Slider
-                        label="Auto Rotation"
-                        value={autoRotateSpeed}
-                        min={0}
-                        max={5.0}
-                        step={0.1}
-                        valueDisplay={`${autoRotateSpeed.toFixed(1)} Speed`}
-                        onChange={(e) => setAutoRotateSpeed(parseFloat(e.target.value))}
-                        className="[&::-webkit-slider-thumb]:border-g-blue"
-                    />
-                </div>
-            </div>
-        </div>
-    );
-};
+export function ControlSidebar() {
+  const s = useSimulation();
+  const [signature, setSignature] = useState(s.definition.signature);
+  const [seed, setSeed] = useState(formatRelations(s.definition.seed));
+  const [error, setError] = useState('');
+  useEffect(() => { setSignature(s.definition.signature); setSeed(formatRelations(s.definition.seed)); setError(''); }, [s.definition]);
+  const dirty = signature !== s.definition.signature || seed !== formatRelations(s.definition.seed);
+  function apply() {
+    try {
+      compileRule(signature);
+      s.setDefinition({ id: 'custom', name: 'Custom model', description: 'A locally defined ordered hypergraph replacement rule.', signature, seed: parseRelations(seed), source: '' });
+      setError('');
+    } catch (issue) { setError(issue instanceof Error ? issue.message : 'Invalid model.'); }
+  }
+  return <aside className="model-panel">
+    <div className="section-label"><span>01 / Model definition</span><span className="tiny-dot" /></div>
+    <h1>Simple rules.<br /><em>Emergent structure.</em></h1>
+    <p className="lede">Explore the consequences of an exact, ordered hypergraph rewrite.</p>
+    <label className="field-label" htmlFor="model-preset">Reference model</label>
+    <select id="model-preset" value={s.definition.id} onChange={event => {
+      const model = RULE_REGISTRY.find(rule => rule.id === event.target.value); if (model) s.setDefinition(model);
+    }}>
+      {RULE_REGISTRY.map(rule => <option key={rule.id} value={rule.id}>{rule.name}</option>)}
+      {s.definition.id === 'custom' && <option value="custom">Custom model</option>}
+    </select>
+    <p className="model-description">{s.definition.description}</p>
+    <div className="field-heading"><label htmlFor="rewrite-rule">Replacement rule</label><span>LHS → RHS</span></div>
+    <textarea id="rewrite-rule" spellCheck={false} rows={3} value={signature} onChange={e => setSignature(e.target.value)} />
+    <div className="field-heading"><label htmlFor="initial-state">Initial relations</label><span>Ordered tuples</span></div>
+    <textarea id="initial-state" spellCheck={false} rows={2} value={seed} onChange={e => setSeed(e.target.value)} />
+    <p className="input-hint">Each pair of inner braces is one relation. Repeated relations remain distinct occurrences.</p>
+    {error && <p className="error-message" role="alert">{error}</p>}
+    <button className="apply-button" onClick={apply}><RotateCcw size={14} /> Apply & reset {dirty && <span className="unsaved-dot" />}</button>
+    <div className="model-contract"><Check size={14} /><span>{dirty ? 'Draft changes are not running' : 'Running the rule and seed shown above'}</span></div>
+    {s.definition.source && <a className="source-link" href={s.definition.source} target="_blank" rel="noreferrer">Read the primary source <ArrowUpRight size={14} /></a>}
+    <details className="settings" open>
+      <summary>Execution settings</summary>
+      <div className="number-fields"><label>Events / batch<input aria-label="Events per batch" type="number" min="1" max="1000" value={s.batchSize} onChange={e => s.setBatchSize(Math.max(1, Math.min(1000, Number(e.target.value) || 1)))} /></label>
+      <label>Live atom limit<input aria-label="Live atom limit" type="number" min="1" max="10000" value={s.maxNodes} onChange={e => s.setMaxNodes(Math.max(1, Math.min(10000, Number(e.target.value) || 1)))} /></label></div>
+      <label className="range-label">Playback interval <span>{s.speedMs} ms</span><input aria-label="Playback interval" type="range" min="100" max="1500" step="100" value={s.speedMs} onChange={e => s.setSpeedMs(Number(e.target.value))} /></label>
+      <p className="input-hint">Atomic events · 20,000 relations · 10,000 events · 100,000 candidate checks per event.</p>
+    </details>
+    <details className="settings"><summary>Display settings</summary>
+      <label className="range-label">Atom size <span>{s.nodeSize}</span><input aria-label="Atom size" type="range" min="1" max="6" step="0.5" value={s.nodeSize} onChange={e => s.setNodeSize(Number(e.target.value))} /></label>
+      <label className="range-label">Layout spacing <span>{s.linkDistance}</span><input aria-label="Layout spacing" type="range" min="10" max="100" step="5" value={s.linkDistance} onChange={e => s.setLinkDistance(Number(e.target.value))} /></label>
+      <p className="input-hint">Layout distances are display coordinates. They are not physical distances.</p>
+    </details>
+  </aside>;
+}

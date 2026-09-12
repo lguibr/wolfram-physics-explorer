@@ -1,48 +1,28 @@
-import { PhysicsRule } from './types';
-import { cosmicRules } from './rules/cosmic';
-import { growthRules } from './rules/growth';
-import { latticeRules } from './rules/lattice';
-import { cycleRules } from './rules/cycle';
-import { chaosRules } from './rules/chaos';
-import { GraphNode, GraphLink } from '@/types';
+import type { ModelDefinition } from './types';
 
-const allRules: PhysicsRule[] = [
-    ...cosmicRules,
-    ...growthRules,
-    ...latticeRules,
-    ...cycleRules,
-    ...chaosRules
+export const RULE_REGISTRY: readonly ModelDefinition[] = [
+  {
+    id: 'wm148', name: 'Branching · wm148',
+    description: 'A relation reproduces itself and extends to a fresh atom.',
+    signature: '{{x,y}} -> {{x,y},{y,z}}', seed: [['1', '1']],
+    source: 'https://www.wolframphysics.org/universes/wm148/',
+  },
+  {
+    id: 'wm121', name: 'Self-loops · wm121',
+    description: 'A self-loop and an incoming relation are produced by each event.',
+    signature: '{{x,y}} -> {{x,x},{z,x}}', seed: [['1', '1']],
+    source: 'https://www.wolframphysics.org/universes/wm121/',
+  },
+  {
+    id: 'setreplace-ternary', name: 'Ternary rewriting',
+    description: 'Two ordered ternary relations are replaced by three.',
+    signature: '{{a,b,c},{b,d,e}} -> {{e,f,a},{f,d,b},{d,e,c}}',
+    seed: [['1','2','3'], ['2','4','5'], ['4','6','7']],
+    source: 'https://github.com/maxitg/SetReplace/blob/44c868bf4622e4542b306846ffdcc47c19d0bba8/README.md',
+  },
 ];
-
-const CATEGORIES = ['GROWTH', 'LATTICE', 'CYCLE', 'CHAOS', 'FRACTAL'] as const;
-for(let i=allRules.length; i<64; i++) {
-    const cat = CATEGORIES[i % 5];
-    allRules.push({
-        id: `gen_rule_${i}`,
-        name: `Variant ${cat} #${i}`,
-        category: cat,
-        description: `Procedurally generated rule variant ${i}.`,
-        signature: `{{x,y}} -> {{x,z},${Array((i%2)+1).fill('{z,y}').join(',')}}`, // Synthesized signature
-        apply: (nodes: GraphNode[], _links: GraphLink[], maxId: number, step: number) => {
-             const count = (i % 2) + 1;
-             const newNodes: GraphNode[] = [];
-             const newLinks: GraphLink[] = [];
-             let localMaxId = maxId;
-             const parent = nodes[Math.floor(Math.random() * nodes.length)];
-             
-             for(let k=0; k<count; k++){
-                 localMaxId++;
-                 const id = localMaxId.toString();
-                 newNodes.push({id, group: step});
-                 newLinks.push({source: parent.id, target: id});
-             }
-             return {newNodes, newLinks};
-        }
-    });
+export function getRuleById(id: string): ModelDefinition {
+  const rule = RULE_REGISTRY.find(r => r.id === id);
+  if (!rule) throw new Error(`Unknown rule: ${id}`);
+  return rule;
 }
-
-export const RULE_REGISTRY = allRules;
-
-export const getRuleById = (id: string): PhysicsRule => {
-    return RULE_REGISTRY.find(r => r.id === id) || RULE_REGISTRY[0];
-};

@@ -1,42 +1,18 @@
-import { describe, it, expect } from 'vitest';
-import { evolveUniverse, createInitialState } from './engine';
-import { RULE_REGISTRY } from './registry';
+import { describe, expect, it } from 'vitest';
+import { createInitialState, evolveUniverse } from './engine';
 
-describe('Physics Engine', () => {
-  it('should initialize with a single node', () => {
+describe('engine event accounting', () => {
+  it('uses a real relation in the default initial state', () => {
     const state = createInitialState();
-    expect(state.nodes).toHaveLength(1);
-    expect(state.links).toHaveLength(0);
+    expect(state.edges.map(e => e.atoms)).toEqual([['1','1']]);
     expect(state.step).toBe(0);
   });
-
-  it('should evolve based on cosmic inflation rule', () => {
-    let state = createInitialState();
-    const inflationRule = RULE_REGISTRY.find(r => r.id === 'cosmic_inflation')!;
-    
-    // Evolve 1 step
-    state = evolveUniverse(state, inflationRule.id, 100);
-    expect(state.nodes.length).toBeGreaterThan(1);
-    expect(state.step).toBe(1);
-    
-    // Check IDs are strings
-    state.nodes.forEach(n => {
-        expect(typeof n.id).toBe('string');
-    });
-  });
-
-  it('should respect max nodes limit', () => {
-    let state = createInitialState();
-    const inflationRule = RULE_REGISTRY.find(r => r.id === 'cosmic_inflation')!;
-    
-    // Set low limit
-    const limit = 5;
-    
-    // Run multiple steps to potential overflow
-    for(let i=0; i<5; i++) {
-        state = evolveUniverse(state, inflationRule.id, limit);
-    }
-    
-    expect(state.nodes.length).toBeLessThanOrEqual(limit);
+  it('reproduces 100 deterministic wm148 events', () => {
+    let state = createInitialState('wm148');
+    for (let i = 0; i < 100; i++) state = evolveUniverse(state, 'wm148', 200);
+    expect(state.step).toBe(100);
+    expect(state.edges).toHaveLength(101);
+    expect(new Set(state.edges.flatMap(e => e.atoms)).size).toBe(101);
+    expect(state.events).toHaveLength(100);
   });
 });
