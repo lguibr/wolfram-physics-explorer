@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSimulation } from '@/context/SimulationContext';
-import { RULE_REGISTRY } from '@/services/physics/registry';
+import { MODEL_GROUPS, RULE_REGISTRY } from '@/services/physics/registry';
 import { compileRule, parseRelations, formatRelations } from '@/services/physics/customRuleParser';
-import type { EventOrdering } from '@/services/physics/types';
+import type { DisplayTheme, EventOrdering } from '@/services/physics/types';
 
 const ORDERING_LABELS: Record<EventOrdering, string> = {
   'least-recent-edge': 'SetReplace default · least recent edge',
@@ -20,7 +20,7 @@ export function ControlSidebar() {
   function apply() {
     try {
       compileRule(signature);
-      s.setDefinition({ id: 'custom', name: 'Custom model', description: 'A locally defined ordered hypergraph replacement rule.', signature, seed: parseRelations(seed), source: '' });
+      s.setDefinition({ id: 'custom', name: 'Custom model', group: 'Custom', description: 'A locally defined ordered hypergraph replacement rule.', signature, seed: parseRelations(seed), source: '' });
       setError('');
     } catch (issue) { setError(issue instanceof Error ? issue.message : 'Invalid model.'); }
   }
@@ -32,7 +32,7 @@ export function ControlSidebar() {
     <select id="model-preset" value={s.definition.id} onChange={event => {
       const model = RULE_REGISTRY.find(rule => rule.id === event.target.value); if (model) s.setDefinition(model);
     }}>
-      {RULE_REGISTRY.map(rule => <option key={rule.id} value={rule.id}>{rule.name}</option>)}
+      {MODEL_GROUPS.map(group => <optgroup key={group} label={group}>{RULE_REGISTRY.filter(rule => rule.group === group).map(rule => <option key={rule.id} value={rule.id}>{rule.name}</option>)}</optgroup>)}
       {s.definition.id === 'custom' && <option value="custom">Custom model</option>}
     </select>
     <p className="model-description">{s.definition.description}</p>
@@ -58,6 +58,11 @@ export function ControlSidebar() {
       <p className="input-hint">Atomic events · 20,000 relations · 10,000 events · 100,000 candidate checks per event.</p>
     </details>
     <details className="settings"><summary>Display settings</summary>
+      <label className="field-label" htmlFor="display-theme">Theme</label>
+      <select id="display-theme" value={s.theme} onChange={e => s.setTheme(e.target.value as DisplayTheme)}>
+        <option value="dark">Dark</option><option value="plain">Plain · light, monochrome</option>
+      </select>
+      <label className="check-label"><input type="checkbox" checked={s.flat} onChange={e => s.setFlat(e.target.checked)} /> Flat layout (2D)</label>
       <label className="range-label">Atom size <span>{s.nodeSize}</span><input aria-label="Atom size" type="range" min="1" max="6" step="0.5" value={s.nodeSize} onChange={e => s.setNodeSize(Number(e.target.value))} /></label>
       <label className="range-label">Layout spacing <span>{s.linkDistance}</span><input aria-label="Layout spacing" type="range" min="10" max="100" step="5" value={s.linkDistance} onChange={e => s.setLinkDistance(Number(e.target.value))} /></label>
       <p className="input-hint">Layout distances are display coordinates. They are not physical distances.</p>

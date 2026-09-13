@@ -32,7 +32,7 @@ function AppContent() {
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = `${s.definition.id}-event-${s.currentState.step}.json`; anchor.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  return <div className="laboratory">
+  return <div className={`laboratory${s.theme === 'plain' ? ' plain' : ''}`}>
     <header className="masthead"><a className="wordmark" href="https://www.wolframphysics.org/" target="_blank" rel="noreferrer"><Activity size={24} /><span>WOLFRAM<span className="wordmark-light"> / PHYSICS EXPLORER</span></span></a>
       <span className="masthead-note">Ordered hypergraph laboratory</span><button className="export-button" onClick={exportState}><ArrowDownToLine size={15} />Export state</button></header>
     <main className="workspace"><ControlSidebar />
@@ -42,9 +42,9 @@ function AppContent() {
           <button aria-pressed={view === 'causal'} onClick={() => { setView('causal'); setSelected(null); }}><GitBranch size={15} />Causal</button></div>
           <button className="icon-button" aria-label="Fit graph" title="Fit graph to view" onClick={() => setFitKey(key => key + 1)}><Expand size={16} /></button></div>
         <div className="graph-heading"><span className="eyebrow">{s.definition.id === 'custom' ? 'Custom rule' : `Reference / ${s.definition.id}`}</span><h2>{view === 'spatial' ? 'The evolving structure' : 'How events depend'}</h2><p>{view === 'spatial' ? 'One state. Every relation occurrence.' : 'Aggregated dependencies between rewriting events.'}</p></div>
-        <GraphVisualizer data={s.currentState} view={view} nodeSize={s.nodeSize} linkDistance={s.linkDistance} fitKey={fitKey} onSelect={selectNode} />
+        <GraphVisualizer data={s.currentState} view={view} nodeSize={s.nodeSize} linkDistance={s.linkDistance} fitKey={fitKey} theme={s.theme} flat={s.flat} onSelect={selectNode} />
         <div className="graph-caption"><div className="legend"><span><i className={view === 'spatial' ? 'mint' : 'amber'} />{view === 'spatial' ? 'Atom' : 'Event'}</span>{view === 'spatial' && <span><i className="amber" />Unary / higher-arity relation</span>}</div>
-          <span>Drag to orbit · scroll to zoom · select to inspect</span></div>
+          <span>{s.flat ? 'Drag to pan · scroll to zoom · select to inspect' : 'Drag to orbit · scroll to zoom · select to inspect'}</span></div>
         {(selectedAtom || selectedRelation || selectedEvent) && <div className="selection-card"><button className="close-selection" aria-label="Close selection" onClick={() => setSelected(null)}>×</button>
           <span className="section-label">Selected {selected!.kind}</span><strong>{selected!.label}</strong>
           {selectedAtom && <button onClick={() => setFilter(selected!.label)}>Show incident relations</button>}

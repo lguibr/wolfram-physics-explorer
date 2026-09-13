@@ -20,6 +20,8 @@ export interface RewriteEvent {
 export type StopReason = 'ready' | 'no-match' | 'node-limit' | 'edge-limit' | 'event-limit' | 'match-limit';
 // Which complete match an event applies when several exist. See ORDERING_DESCRIPTIONS in model.ts.
 export type EventOrdering = 'least-recent-edge' | 'oldest-edge';
+// Display-only choices; neither affects the rewrite.
+export type DisplayTheme = 'dark' | 'plain';
 export interface ModelState {
   readonly edges: readonly Hyperedge[];
   readonly events: readonly RewriteEvent[];
@@ -39,6 +41,7 @@ export interface ModelLimits {
 export interface ModelDefinition {
   id: string;
   name: string;
+  group: string; // picker heading; display only
   description: string;
   signature: string;
   seed: string[][];

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, ty
 import { createModelState, DEFAULT_ORDERING } from '@/services/physics/model';
 import { compileRule } from '@/services/physics/customRuleParser';
 import { RULE_REGISTRY } from '@/services/physics/registry';
-import type { EventOrdering, ModelDefinition, ModelState } from '@/services/physics/types';
+import type { DisplayTheme, EventOrdering, ModelDefinition, ModelState } from '@/services/physics/types';
 import type { WorkerRequest, WorkerResponse } from '@/services/workerProtocol';
 
 export const HISTORY_LIMIT = 100;
@@ -19,6 +19,8 @@ interface SimulationContextType {
   batchSize: number; setBatchSize: (value: number) => void;
   nodeSize: number; setNodeSize: (value: number) => void;
   linkDistance: number; setLinkDistance: (value: number) => void;
+  theme: DisplayTheme; setTheme: (value: DisplayTheme) => void;
+  flat: boolean; setFlat: (value: boolean) => void;
   batchMetrics: BatchMetrics | null;
 }
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
@@ -37,6 +39,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
   const [batchSize, setBatchSize] = useState(10);
   const [nodeSize, setNodeSize] = useState(3);
   const [linkDistance, setLinkDistance] = useState(30);
+  const [theme, setTheme] = useState<DisplayTheme>('dark');
+  const [flat, setFlat] = useState(false);
   const [batchMetrics, setBatchMetrics] = useState<BatchMetrics | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const runId = useRef(0);
@@ -120,7 +124,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     isPlaying, isCalculating, error, workerFailed, togglePlay: () => setIsPlaying(value => !value), stepForward,
     stepBack: () => jumpToStep(currentStepIndex - 1), jumpToStep, resetSimulation,
     speedMs, setSpeedMs, maxNodes, setMaxNodes, batchSize, setBatchSize, nodeSize, setNodeSize,
-    linkDistance, setLinkDistance, batchMetrics }}>{children}</SimulationContext.Provider>;
+    linkDistance, setLinkDistance, theme, setTheme, flat, setFlat, batchMetrics }}>{children}</SimulationContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

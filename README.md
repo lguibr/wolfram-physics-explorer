@@ -19,7 +19,27 @@ This is a computational tool. It executes exactly the rule and seed shown on scr
 | --- | --- | --- | --- |
 | `wm148` | `{{x,y}} -> {{x,y},{y,z}}` | `{{1,1}}` | https://www.wolframphysics.org/universes/wm148/ |
 | `wm121` | `{{x,y}} -> {{x,x},{z,x}}` | `{{1,1}}` | https://www.wolframphysics.org/universes/wm121/ |
+| `two-to-four` | `{{x,y},{x,z}} -> {{x,z},{x,w},{y,w},{z,w}}` | `{{0,0},{0,0}}` | SetReplace `CausalGraphs.md` at commit `44c868b` |
 | `setreplace-ternary` | `{{a,b,c},{b,d,e}} -> {{e,f,a},{f,d,b},{d,e,c}}` | `{{1,2,3},{2,4,5},{4,6,7}}` | SetReplace README at commit `44c868b` |
+
+The picker also lists every universe on the first index page of the [Registry of Notable Universe Models](https://www.wolframphysics.org/universes/), read on 2026-09-13. Rule text, the self-loop initial condition and the generation count come from each page's own `WolframModel` command; the numeric labels in these rules are pattern variables, exactly as printed.
+
+| ID | Rule | Seed | Signature | Source |
+| --- | --- | --- | --- | --- |
+| `wm1113` | `{{1,2}}->{{3,3},{3,2},{1,2}}` | `{{1,1}}` | 1₂ → 3₂ | https://www.wolframphysics.org/universes/wm1113/ |
+| `wm1116` | `{{1,2},{3,2}}->{{4,1},{1,4},{2,4},{3,4}}` | `{{1,1},{1,1}}` | 2₂ → 4₂ | https://www.wolframphysics.org/universes/wm1116/ |
+| `wm1137` | `{{1,1,2}}->{{2,2,2},{2,1,2},{1,2,3},{3,3,1}}` | `{{1,1,1}}` | 1₃ → 4₃ | https://www.wolframphysics.org/universes/wm1137/ |
+| `wm1157` | `{{1,2},{1,3},{1,4}}->{{1,1},{5,1},{5,2},{3,5},{4,3}}` | `{{1,1},{1,1},{1,1}}` | 3₂ → 5₂ | https://www.wolframphysics.org/universes/wm1157/ |
+| `wm1158` | `{{1,1,2},{3,2,4}}->{{2,2,4},{5,2,3},{3,5,1}}` | `{{1,1,1},{1,1,1}}` | 2₃ → 3₃ | https://www.wolframphysics.org/universes/wm1158/ |
+| `wm1167` | `{{1,1,2},{3,4,1}}->{{1,1,4},{5,4,3},{2,5,1}}` | `{{1,1,1},{1,1,1}}` | 2₃ → 3₃ | https://www.wolframphysics.org/universes/wm1167/ |
+| `wm1172` | `{{1,2},{3,2}}->{{4,1},{4,2},{1,2},{4,3}}` | `{{1,1},{1,1}}` | 2₂ → 4₂ | https://www.wolframphysics.org/universes/wm1172/ |
+| `wm1173` | `{{1,2,1},{3,4,5}}->{{6,1,6},{1,5,2},{2,3,7},{3,5,8}}` | `{{1,1,1},{1,1,1}}` | 2₃ → 4₃ | https://www.wolframphysics.org/universes/wm1173/ |
+| `wm1194` | `{{1,1,2}}->{{3,3,1},{2,1,1}}` | `{{1,1,1}}` | 1₃ → 2₃ | https://www.wolframphysics.org/universes/wm1194/ |
+| `wm1199` | `{{1,1,1},{2,3,1}}->{{3,3,3},{3,1,3},{4,4,2}}` | `{{1,1,1},{1,1,1}}` | 2₃ → 3₃ | https://www.wolframphysics.org/universes/wm1199/ |
+| `wm1218` | `{{1,2},{2,3}}->{{2,4},{2,4},{4,1},{3,4}}` | `{{1,1},{1,1}}` | 2₂ → 4₂ | https://www.wolframphysics.org/universes/wm1218/ |
+| `wm1268` | `{{1,1,2},{3,4,2}}->{{4,4,2},{1,5,2},{1,5,3}}` | `{{1,1,1},{1,1,1}}` | 2₃ → 3₃ | https://www.wolframphysics.org/universes/wm1268/ |
+| `wm11114` | `{{1,2,3},{4,3,5},{3,6}}->{{6,7,8},{6,9,10},{11,8,10},{5,2,9},{9,9},{1,9},{7,5},{8,5}}` | `{{1,1,1},{1,1,1},{1,1}}` | 1₂ 2₃ → 4₂ 4₃ | https://www.wolframphysics.org/universes/wm11114/ |
+| `wm12518` | `{{1,2,3},{4,3,5},{6,1}}->{{7,5,4},{5,1,2},{8,2,7},{3,2,9},{10,5},{11,5},{12,4},{13,9}}` | `{{1,1,1},{1,1,1},{1,1}}` | 1₂ 2₃ → 4₂ 4₃ | https://www.wolframphysics.org/universes/wm12518/ |
 
 Expected one-event results were derived by hand from the cited descriptions and encoded as tests. No WolframModel or SetReplace software was executed as an oracle; instead, `scripts/oracle-compare.mjs` checks the engine against 18 textual outputs printed in the SetReplace documentation at commit `44c868b`.
 
@@ -31,12 +51,13 @@ Flat ordered relations only. Labels are either names (`[A-Za-z][A-Za-z0-9]*`) or
 
 - Rule and seed editor with a source link for each reference model.
 - Spatial view (atoms, ordered binary arrows, hubs for unary and higher-arity relations, curved duplicate edges and self-loops) and causal view (events, aggregated dependencies).
+- Display settings: a dark or plain theme (plain is a white page with a monochrome graph) and a flat 2D layout toggle. Both are presentation only.
 - Selection inspector, filterable relation table and latest-event details.
 - One event, configurable batches, play, reset and a timeline of the latest 100 snapshots. Batches save their final state; event provenance keeps the full trajectory. Changing the event ordering starts a new run, because a trajectory is recorded under one ordering.
 - Measurements: live atoms, relations, incidences, components, incidence degree, arity counts, self-loops, events and generation, plus rewrite time, worker round trip, candidate checks and visible-tab frame cadence. Cadence measures animation callbacks, not GPU time.
 - JSON export of the definition, limits, event ordering and canonical state. Import is not implemented.
 
-Layout position, force distance, atom size and colors are display settings and never affect the rewrite.
+Layout position, force distance, atom size, theme, flat or 3D layout and colors are display settings and never affect the rewrite.
 
 ## Commands
 
