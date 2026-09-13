@@ -9,7 +9,7 @@ This is a computational tool. It executes exactly the rule and seed shown on scr
 - **State.** A multiset of ordered tuples. Every relation occurrence has its own ID, a creator event and a generation. Duplicate tuples are distinct occurrences.
 - **Rule.** Written as `{{x,y}} -> {{x,y},{y,z}}`. Every label in the rule is a pattern variable. A repeated variable must bind the same atom; distinct variables may bind the same atom. Variables that appear only on the right-hand side receive fresh atoms, shared within one event and new for every event.
 - **Event.** One rule application. It consumes distinct input occurrences and creates every output occurrence atomically. Pure deletion (`{{x}} -> {}`) is supported. Generation is one plus the maximum generation of the inputs.
-- **Scheduling.** The first complete match in left-hand-side order over the oldest surviving occurrences. This is a project convention; in SetReplace's vocabulary it behaves like `OldestEdge`, not the default `LeastRecentEdge`. Single-input rules and non-overlapping systems produce the same generations under either ordering; overlapping multi-input rules do not.
+- **Scheduling.** Selectable event ordering. The default, `least-recent-edge`, applies the complete match that avoids the newest occurrences, with ties broken by rule-input order; this is SetReplace's documented default (`LeastRecentEdge`, `RuleOrdering`) and reproduces every published textual output checked below. The `oldest-edge` option keeps the earlier first-match convention (`OldestEdge`, `RuleOrdering`). Single-input rules and non-overlapping systems evolve identically under both; overlapping multi-input rules do not. A least-recent search that exceeds the candidate budget stops with `match-limit` instead of applying an uncertified match.
 - **Causal links.** Event B depends on event A when B consumes an occurrence that A created. Sharing an atom alone creates no link. The causal view aggregates dependencies into one link per parent pair, as stated in the UI.
 - **Stopping.** No matching input halts the system. Live-atom, relation, event and candidate-check budgets stop it separately. A limit refuses the whole event; it never applies a partial rewrite.
 
@@ -32,9 +32,9 @@ Flat ordered relations only. Labels are either names (`[A-Za-z][A-Za-z0-9]*`) or
 - Rule and seed editor with a source link for each reference model.
 - Spatial view (atoms, ordered binary arrows, hubs for unary and higher-arity relations, curved duplicate edges and self-loops) and causal view (events, aggregated dependencies).
 - Selection inspector, filterable relation table and latest-event details.
-- One event, configurable batches, play, reset and a timeline of the latest 100 snapshots. Batches save their final state; event provenance keeps the full trajectory.
+- One event, configurable batches, play, reset and a timeline of the latest 100 snapshots. Batches save their final state; event provenance keeps the full trajectory. Changing the event ordering starts a new run, because a trajectory is recorded under one ordering.
 - Measurements: live atoms, relations, incidences, components, incidence degree, arity counts, self-loops, events and generation, plus rewrite time, worker round trip, candidate checks and visible-tab frame cadence. Cadence measures animation callbacks, not GPU time.
-- JSON export of the definition, limits, scheduler convention and canonical state. Import is not implemented.
+- JSON export of the definition, limits, event ordering and canonical state. Import is not implemented.
 
 Layout position, force distance, atom size and colors are display settings and never affect the rewrite.
 
@@ -55,14 +55,14 @@ node scripts/oracle-compare.mjs --output docs/oracle-comparison.json
 
 `scripts/benchmark.mjs` runs deterministic matcher and evolution workloads, checks input and result digests, and records hardware, source hashes and raw samples. `docs/performance-baseline.json` and `docs/performance-current.json` are measured reports for the matcher before and after candidate indexing.
 
-`scripts/oracle-compare.mjs` replays every published textual `WolframModel` output from the pinned SetReplace documentation (creator and destroyer indices, event lists, generation lists, per-generation vertex and edge counts, edge-index states, the ordering example and the README ternary step) under the engine scheduler and under an emulation of SetReplace's default ordering. `docs/oracle-comparison.json` is its report.
+`scripts/oracle-compare.mjs` replays every published textual `WolframModel` output from the pinned SetReplace documentation (creator and destroyer indices, event lists, generation lists, per-generation vertex and edge counts, edge-index states, the ordering example and the README ternary step) under each engine ordering and under an independent emulation of SetReplace's default ordering. `docs/oracle-comparison.json` is its report. `docs/performance-least-recent-edge.json` is the benchmark report taken after the default ordering changed; the join workloads examine one more candidate each to certify the choice, the single-input workload is unchanged, and the ternary workload follows a different trajectory.
 
 ## Verification status
 
 - Unit tests cover the model (including a 3,200-case comparison against an independent brute-force matcher), the parser, presets, the worker protocol, metrics, the projection and the playback lifecycle.
 - Headless Chromium checks against the dev server and the built bundle verified exact first-event tuples for wm148 and wm121, custom unary growth and deletion, whole-event refusal at the live-atom limit, stale worker replies after reset and model switch, causal view, JSON export, a 500-event batch, timeline replay, no horizontal overflow at 1440, 768 and 390 pixels, and recovery messaging when the worker fails to start.
-- Published SetReplace outputs: 13 of 18 checks match with the engine scheduler and 18 of 18 when SetReplace's default `LeastRecentEdge` ordering is emulated. Every ordering-independent check matches; the five differences are all ordering choices on overlapping multi-input rules (see `docs/oracle-comparison.json`).
-- Not verified: live execution against a Wolfram kernel, agreement with SetReplace's default histories on overlapping rules with the engine scheduler, multiway behavior, and any physical interpretation.
+- Published SetReplace outputs: 18 of 18 checks match under the default `least-recent-edge` ordering, and the independent emulation agrees on all 18. Under `oldest-edge` 13 of 18 match; the five differences are all ordering choices on overlapping multi-input rules (see `docs/oracle-comparison.json`).
+- Not verified: live execution against a Wolfram kernel, tie situations SetReplace resolves at random (none occur in the checked examples), multiway behavior, and any physical interpretation.
 
 ## Source layout
 

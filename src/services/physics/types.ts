@@ -18,6 +18,8 @@ export interface RewriteEvent {
   readonly generation: number;
 }
 export type StopReason = 'ready' | 'no-match' | 'node-limit' | 'edge-limit' | 'event-limit' | 'match-limit';
+// Which complete match an event applies when several exist. See ORDERING_DESCRIPTIONS in model.ts.
+export type EventOrdering = 'least-recent-edge' | 'oldest-edge';
 export interface ModelState {
   readonly edges: readonly Hyperedge[];
   readonly events: readonly RewriteEvent[];

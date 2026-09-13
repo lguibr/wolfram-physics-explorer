@@ -20,6 +20,15 @@ describe('serialized worker protocol', () => {
     expect(result.type === 'result' && result.state.status).toBe('no-match');
     expect(result.type === 'result' && result.completed).toBe(0);
   });
+  it('applies the requested event ordering and rejects unknown ones', () => {
+    const seed = createModelState([['1','2'], ['a','b'], ['b','c'], ['2','3']]);
+    const join = { ...request, signature: '{{x,y},{y,z}} -> {{x,x}}', state: seed, limits: {} };
+    const byDefault = processWorkerRequest(join);
+    expect(byDefault.type === 'result' && byDefault.state.events[0].inputEdges).toEqual(['e1', 'e2']);
+    const oldest = processWorkerRequest({ ...join, ordering: 'oldest-edge' });
+    expect(oldest.type === 'result' && oldest.state.events[0].inputEdges).toEqual(['e0', 'e3']);
+    expect(processWorkerRequest({ ...join, ordering: 'random' as never }).type).toBe('error');
+  });
   it('rejects unsupported shared-buffer execution', () => {
     expect(processWorkerRequest({ ...request, type: 'STEP_SHARED' } as unknown as typeof request).type).toBe('error');
   });

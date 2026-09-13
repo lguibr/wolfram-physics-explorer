@@ -31,7 +31,8 @@ class FakeWorker {
 function Harness() {
   const s = useSimulation();
   return <>
-    <output data-testid="state">{JSON.stringify({ step: s.currentState.step, status: s.currentState.status, length: s.history.length, busy: s.isCalculating, error: s.error, rule: s.definition.id })}</output>
+    <output data-testid="state">{JSON.stringify({ step: s.currentState.step, status: s.currentState.status, length: s.history.length, busy: s.isCalculating, error: s.error, rule: s.definition.id, ordering: s.ordering })}</output>
+    <button onClick={() => s.setOrdering('oldest-edge')}>oldest</button>
     <button onClick={() => s.stepForward()}>step</button>
     <button onClick={() => { s.stepForward(); s.stepForward(); }}>double</button>
     <button onClick={s.resetSimulation}>reset</button>
@@ -51,6 +52,16 @@ describe('worker and playback lifecycle', () => {
     const req = FakeWorker.current.requests[0];
     expect(req.signature).toBe('{{x}} -> {{y}}'); expect(req.state.edges[0].atoms).toEqual(['1']);
     act(() => FakeWorker.current.reply()); expect(state().step).toBe(1);
+  });
+  it('sends the selected event ordering and starts a new run when it changes', () => {
+    render(<SimulationProvider><Harness /></SimulationProvider>);
+    fireEvent.click(screen.getByText('step'));
+    expect(FakeWorker.current.requests[0].ordering).toBe('least-recent-edge');
+    act(() => FakeWorker.current.reply()); expect(state().length).toBe(2);
+    fireEvent.click(screen.getByText('oldest'));
+    expect(state()).toMatchObject({ step: 0, length: 1, ordering: 'oldest-edge' });
+    fireEvent.click(screen.getByText('step'));
+    expect(FakeWorker.current.requests[1].ordering).toBe('oldest-edge');
   });
   it('allows only one outstanding request even within the same render', () => {
     render(<SimulationProvider><Harness /></SimulationProvider>);

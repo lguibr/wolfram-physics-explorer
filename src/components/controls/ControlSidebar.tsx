@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { useSimulation } from '@/context/SimulationContext';
 import { RULE_REGISTRY } from '@/services/physics/registry';
 import { compileRule, parseRelations, formatRelations } from '@/services/physics/customRuleParser';
+import type { EventOrdering } from '@/services/physics/types';
+
+const ORDERING_LABELS: Record<EventOrdering, string> = {
+  'least-recent-edge': 'SetReplace default · least recent edge',
+  'oldest-edge': 'Oldest edge · earlier convention',
+};
 import { ArrowUpRight, Check, RotateCcw } from 'lucide-react';
 
 export function ControlSidebar() {
@@ -43,6 +49,11 @@ export function ControlSidebar() {
       <summary>Execution settings</summary>
       <div className="number-fields"><label>Events / batch<input aria-label="Events per batch" type="number" min="1" max="1000" value={s.batchSize} onChange={e => s.setBatchSize(Math.max(1, Math.min(1000, Number(e.target.value) || 1)))} /></label>
       <label>Live atom limit<input aria-label="Live atom limit" type="number" min="1" max="10000" value={s.maxNodes} onChange={e => s.setMaxNodes(Math.max(1, Math.min(10000, Number(e.target.value) || 1)))} /></label></div>
+      <label className="field-label" htmlFor="event-ordering">Event ordering</label>
+      <select id="event-ordering" value={s.ordering} onChange={e => s.setOrdering(e.target.value as EventOrdering)}>
+        {(Object.keys(ORDERING_LABELS) as EventOrdering[]).map(key => <option key={key} value={key}>{ORDERING_LABELS[key]}</option>)}
+      </select>
+      <p className="input-hint">Which complete match fires when several exist. Changing it starts a new run. Single-input rules evolve identically under both.</p>
       <label className="range-label">Playback interval <span>{s.speedMs} ms</span><input aria-label="Playback interval" type="range" min="100" max="1500" step="100" value={s.speedMs} onChange={e => s.setSpeedMs(Number(e.target.value))} /></label>
       <p className="input-hint">Atomic events · 20,000 relations · 10,000 events · 100,000 candidate checks per event.</p>
     </details>

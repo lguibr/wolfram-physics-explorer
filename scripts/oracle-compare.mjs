@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Compare the engine against textual outputs published in the pinned SetReplace documentation.
-// Every check runs twice: with the engine's own scheduler, and with SetReplace's documented default
-// ordering {"LeastRecentEdge", "RuleOrdering", "RuleIndex"} emulated on top of the engine's state model.
-// The emulation re-implements match enumeration and event application (see `emulated` below), so its
-// column tests the ordering hypothesis rather than the engine's matcher.
+// Every check runs three times: with the engine under each supported event ordering, and with SetReplace's
+// documented default ordering {"LeastRecentEdge", "RuleOrdering", "RuleIndex"} emulated independently on
+// top of the engine's state model. The emulation re-implements match enumeration and event application
+// (see `emulatedStep` below), so its column cross-checks the engine's own least-recent search.
 // Example: node scripts/oracle-compare.mjs --output docs/oracle-comparison.json
 import { writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -19,7 +19,7 @@ const root = path.resolve(options.root ?? process.cwd());
 const require = createRequire(path.join(root, 'package.json'));
 const esbuild = require('esbuild');
 const entry = [
-  `export { createModelState, rewriteOnce, ORDERING } from ${JSON.stringify(path.join(root, 'src/services/physics/model.ts'))};`,
+  `export { createModelState, rewriteOnce, ORDERINGS, ORDERING_DESCRIPTIONS } from ${JSON.stringify(path.join(root, 'src/services/physics/model.ts'))};`,
   `export { compileRule } from ${JSON.stringify(path.join(root, 'src/services/physics/customRuleParser.ts'))};`,
 ].join('\n');
 const bundle = await esbuild.build({ stdin: { contents: entry, resolveDir: root, sourcefile: 'oracle-entry.ts', loader: 'ts' }, bundle: true, write: false, format: 'esm', platform: 'node', target: 'node22', logLevel: 'silent' });
@@ -36,8 +36,8 @@ const byCreation = edges => [...edges].sort((a, b) => num(a.id) - num(b.id));
 
 // Engine scheduler: rewriteOnce on a view that hides edges beyond the generation cap, mirroring
 // WolframModel declining matches whose generation would exceed the requested number of generations.
-const engineStep = (state, rule, eligible) => {
-  const next = engine.rewriteOnce({ ...state, edges: eligible }, rule, LIMITS);
+const engineStep = ordering => (state, rule, eligible) => {
+  const next = engine.rewriteOnce({ ...state, edges: eligible }, rule, LIMITS, ordering);
   if (next.status !== 'ready' && next.status !== 'event-limit') return undefined;
   const event = next.events[next.events.length - 1];
   const consumed = new Set(event.inputEdges);
@@ -184,7 +184,7 @@ const oracles = [
     note: 'Compared modulo fresh-atom relabeling and edge order. Not a published textual output.' },
 ];
 
-const schedulers = { engine: engineStep, 'emulated-least-recent-edge': emulatedStep };
+const schedulers = Object.fromEntries([...engine.ORDERINGS.map(o => [`engine:${o}`, engineStep(o)]), ['emulated-least-recent-edge', emulatedStep]]);
 const results = oracles.map(o => {
   const rule = engine.compileRule(o.rule);
   const observed = {};
@@ -198,7 +198,7 @@ const summary = Object.fromEntries(Object.keys(schedulers).map(name => [name, `$
 const report = {
   generatedAt: new Date().toISOString(),
   pinnedSetReplaceCommit: PINNED_COMMIT,
-  engineOrdering: engine.ORDERING,
+  engineOrderings: engine.ORDERING_DESCRIPTIONS,
   emulatedOrdering: 'SetReplace default {"LeastRecentEdge", "RuleOrdering", "RuleIndex"} re-implemented in this script',
   unsupportedPublishedExamples: [
     'pattern rules with arithmetic or conditions (AllEdgesThroughoutEvolution, CausalGraphs, FinalElementCounts, TerminationReason)',

@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
-import { createModelState } from '@/services/physics/model';
+import { createModelState, DEFAULT_ORDERING } from '@/services/physics/model';
 import { compileRule } from '@/services/physics/customRuleParser';
 import { RULE_REGISTRY } from '@/services/physics/registry';
-import type { ModelDefinition, ModelState } from '@/services/physics/types';
+import type { EventOrdering, ModelDefinition, ModelState } from '@/services/physics/types';
 import type { WorkerRequest, WorkerResponse } from '@/services/workerProtocol';
 
 export const HISTORY_LIMIT = 100;
@@ -10,6 +10,7 @@ export interface BatchMetrics { rewriteMs: number; roundTripMs: number; events: 
 interface SimulationContextType {
   history: ModelState[]; currentStepIndex: number; currentState: ModelState;
   definition: ModelDefinition; setDefinition: (definition: ModelDefinition) => void;
+  ordering: EventOrdering; setOrdering: (ordering: EventOrdering) => void;
   isPlaying: boolean; isCalculating: boolean; error: string; workerFailed: boolean;
   togglePlay: () => void; stepForward: (count?: number) => void;
   stepBack: () => void; jumpToStep: (index: number) => void; resetSimulation: () => void;
@@ -24,6 +25,7 @@ const SimulationContext = createContext<SimulationContextType | undefined>(undef
 
 export function SimulationProvider({ children }: { children: ReactNode }) {
   const [definition, updateDefinition] = useState(RULE_REGISTRY[0]);
+  const [ordering, updateOrdering] = useState<EventOrdering>(DEFAULT_ORDERING);
   const [history, setHistory] = useState<ModelState[]>(() => [createModelState(RULE_REGISTRY[0].seed)]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -85,6 +87,8 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     resetWith(model); updateDefinition({ ...model, seed: model.seed.map(edge => [...edge]) });
   }, [resetWith]);
   const resetSimulation = useCallback(() => resetWith(definition), [resetWith, definition]);
+  // A trajectory is recorded under one ordering, so changing it starts a new run.
+  const setOrdering = useCallback((next: EventOrdering) => { resetWith(definition); updateOrdering(next); }, [resetWith, definition]);
   const jumpToStep = useCallback((index: number) => {
     invalidate(); setCurrentStepIndex(Math.max(0, Math.min(Math.trunc(index), history.length - 1)));
   }, [invalidate, history.length]);
@@ -98,21 +102,21 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     const identity = { requestId: ++nextRequestId.current, runId: runId.current };
     pending.current = { ...identity, sourceStep: currentState.step, started: performance.now() };
     setIsCalculating(true); setError('');
-    const request: WorkerRequest = { type: 'evolve', ...identity, state: currentState, signature: definition.signature, count,
+    const request: WorkerRequest = { type: 'evolve', ...identity, state: currentState, signature: definition.signature, count, ordering,
       limits: { maxNodes, maxEdges: 20000, maxEvents: 10000, maxMatchChecks: 100000 } };
     try { worker.postMessage(request); }
     catch (issue) {
       pending.current = null; setIsCalculating(false); setIsPlaying(false);
       setError(issue instanceof Error ? issue.message : 'Unable to post the computation request.');
     }
-  }, [currentStepIndex, history.length, currentState, definition.signature, maxNodes]);
+  }, [currentStepIndex, history.length, currentState, definition.signature, maxNodes, ordering]);
   useEffect(() => {
     if (!isPlaying) return;
     const timer = window.setInterval(() => stepForward(batchSize), speedMs);
     return () => window.clearInterval(timer);
   }, [isPlaying, speedMs, batchSize, stepForward]);
 
-  return <SimulationContext.Provider value={{ history, currentStepIndex, currentState, definition, setDefinition,
+  return <SimulationContext.Provider value={{ history, currentStepIndex, currentState, definition, setDefinition, ordering, setOrdering,
     isPlaying, isCalculating, error, workerFailed, togglePlay: () => setIsPlaying(value => !value), stepForward,
     stepBack: () => jumpToStep(currentStepIndex - 1), jumpToStep, resetSimulation,
     speedMs, setSpeedMs, maxNodes, setMaxNodes, batchSize, setBatchSize, nodeSize, setNodeSize,
