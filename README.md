@@ -49,12 +49,14 @@ Flat ordered relations only. Labels are either names (`[A-Za-z][A-Za-z0-9]*`) or
 
 ## Workbench
 
-- Rule and seed editor with a source link for each reference model.
+The graph is the page. Everything else is a small overlay: a top bar with the model picker, the spatial/causal switch, fit, and three icon buttons (model definition and settings, measurements and inspector, export); a floating transport pill at the bottom; and a one-line status with atom, relation and generation counts. The two panels open as drawers over the graph and are closed by default.
+
+- Rule and seed editor with a source link for each reference model, in the model drawer.
 - Spatial view (atoms, ordered binary arrows, hubs for unary and higher-arity relations, curved duplicate edges and self-loops) and causal view (events, aggregated dependencies).
 - Display settings: a dark or plain theme (plain is a white page with a monochrome graph) and a flat 2D layout toggle. Both are presentation only.
-- Selection inspector, filterable relation table and latest-event details.
-- One event, configurable batches, play, reset and a timeline of the latest 100 snapshots. Batches save their final state; event provenance keeps the full trajectory. Changing the event ordering starts a new run, because a trajectory is recorded under one ordering.
-- Measurements: live atoms, relations, incidences, components, incidence degree, arity counts, self-loops, events and generation, plus rewrite time, worker round trip, candidate checks and visible-tab frame cadence. Cadence measures animation callbacks, not GPU time.
+- Selection card on click; filterable relation table, latest-event details and the model-semantics note in the inspector drawer.
+- Transport pill: reset, previous snapshot, run/pause, one event, batch, a snapshot slider over the latest 100 snapshots and the event counter. Batches save their final state; event provenance keeps the full trajectory. Changing the event ordering starts a new run, because a trajectory is recorded under one ordering.
+- Measurements, in the inspector drawer: live atoms, relations, incidences, components, incidence degree, arity counts, self-loops, events and generation, plus rewrite time, worker round trip, candidate checks and visible-tab frame cadence. Cadence measures animation callbacks, not GPU time.
 - JSON export of the definition, limits, event ordering and canonical state. Import is not implemented.
 
 Layout position, force distance, atom size, theme, flat or 3D layout and colors are display settings and never affect the rewrite.
