@@ -15,7 +15,7 @@ export const cosmicRules: PhysicsRule[] = [
 
             const count = 3;
             // Guard against empty nodes
-            if (nodes.length === 0) return { newNodes, newLinks };
+            if (nodes.length === 0) return { newNodes, newLinks, linksToRemove: [] };
 
             const singularityId = nodes[0].id;
             
@@ -38,7 +38,7 @@ export const cosmicRules: PhysicsRule[] = [
                     newLinks.push({ source: id, target: randomTarget.id });
                 }
             }
-            return { newNodes, newLinks };
+            return { newNodes, newLinks, linksToRemove: [] };
         }
     },
     {
@@ -65,7 +65,7 @@ export const cosmicRules: PhysicsRule[] = [
                     newLinks.push({ source: parent.id, target: id });
                 }
             }
-            return { newNodes, newLinks };
+            return { newNodes, newLinks, linksToRemove: [] };
         }
     },
     {
@@ -82,7 +82,8 @@ export const cosmicRules: PhysicsRule[] = [
                  const id = (maxId + 1).toString();
                  return {
                      newNodes: [{ id, group: step, val: 1 }],
-                     newLinks: [{ source: parent.id, target: id }]
+                     newLinks: [{ source: parent.id, target: id }],
+                     linksToRemove: []
                  };
             }
 
@@ -91,7 +92,7 @@ export const cosmicRules: PhysicsRule[] = [
                 const newNode = nodes[nodes.length - 1 - Math.floor(Math.random() * 10)];
                 newLinks.push({ source: oldNode.id, target: newNode.id, type: 'wormhole' });
             }
-            return { newNodes: [], newLinks };
+            return { newNodes: [], newLinks, linksToRemove: [] };
         }
     }
 ];

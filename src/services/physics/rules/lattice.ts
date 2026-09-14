@@ -24,7 +24,7 @@ export const latticeRules: PhysicsRule[] = [
                     }
                 }
             });
-            return { newNodes, newLinks };
+            return { newNodes, newLinks, linksToRemove: [] };
         }
     }
 ];

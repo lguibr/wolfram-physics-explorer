@@ -27,7 +27,7 @@ export const chaosRules: PhysicsRule[] = [
                      newLinks.push({ source: id, target: nodes[0].id });
                 }
             }
-            return { newNodes, newLinks };
+            return { newNodes, newLinks, linksToRemove: [] };
         }
     }
 ];

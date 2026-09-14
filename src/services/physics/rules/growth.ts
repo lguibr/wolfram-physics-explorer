@@ -28,7 +28,7 @@ for (let i = 2; i <= 4; i++) {
           newLinks.push({ source: node.id, target: id });
         }
       });
-      return { newNodes, newLinks };
+      return { newNodes, newLinks, linksToRemove: [] };
     }
   });
 }
